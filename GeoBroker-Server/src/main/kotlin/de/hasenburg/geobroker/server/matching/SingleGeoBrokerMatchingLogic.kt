@@ -8,6 +8,7 @@ import de.hasenburg.geobroker.commons.model.message.payloads.PUBACKPayload
 import de.hasenburg.geobroker.commons.model.message.payloads.SUBACKPayload
 import de.hasenburg.geobroker.commons.model.message.payloads.UNSUBACKPayload
 import de.hasenburg.geobroker.server.communication.InternalServerMessage
+import de.hasenburg.geobroker.server.communication.ResourceMetrics
 import de.hasenburg.geobroker.server.storage.TopicAndGeofenceMapper
 import de.hasenburg.geobroker.server.storage.client.ClientDirectory
 import org.apache.logging.log4j.LogManager
@@ -80,6 +81,9 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
 
         logger.trace("Sending response $response")
         response.getZMsg(kryo).send(clients)
+
+        //update
+        ResourceMetrics.addSubscription(payload.topic)
     }
 
     override fun processUNSUBSCRIBE(message: InternalServerMessage, clients: Socket, brokers: Socket,
@@ -98,6 +102,8 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
 
         logger.trace("Sending response $response")
         response.getZMsg(kryo).send(clients)
+
+        ResourceMetrics.removeSubscription(payload.topic)
     }
 
     override fun processPUBLISH(message: InternalServerMessage, clients: Socket, brokers: Socket,
@@ -124,6 +130,9 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
         val response =
                 InternalServerMessage(message.clientIdentifier, ControlPacketType.PUBACK, PUBACKPayload(reasonCode))
         response.getZMsg(kryo).send(clients)
+
+        //update
+        ResourceMetrics.setPublishedMessages(payload.topic, 1)
     }
 
 

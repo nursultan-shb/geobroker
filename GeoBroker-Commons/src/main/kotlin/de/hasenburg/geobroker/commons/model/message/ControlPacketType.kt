@@ -18,6 +18,8 @@ enum class ControlPacketType {
     DISCONNECT, //
     AUTH, //
 
+    UTILIZATION,
+
     // Inter-Broker Communication (no typical MQTT messages, so other spelling)
     BrokerForwardDisconnect, //
     BrokerForwardPingreq, //
