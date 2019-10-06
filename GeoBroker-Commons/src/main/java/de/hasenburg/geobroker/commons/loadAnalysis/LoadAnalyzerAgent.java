@@ -23,8 +23,6 @@ public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
         poller.register(loadAnalyzer.pipe, ZMQ.Poller.POLLIN);
         poller.register(loadAnalyzer.dealer, ZMQ.Poller.POLLIN);
 
-        //connect to plan creator and send hello message
-        loadAnalyzer.initConnection();
         while (!Thread.currentThread().isInterrupted()) {
 
             if (System.currentTimeMillis() - lastUtilizationRequestTime > 10*1000 ){
@@ -44,8 +42,8 @@ public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
             if (poller.pollin(0))
                 loadAnalyzer.handlePipeMessage();
 
-            //if (poller.pollin(1))
-            //get info from plan creator;
+            if (poller.pollin(1))
+                loadAnalyzer.handleDealerMessage();
         }
     }
 }

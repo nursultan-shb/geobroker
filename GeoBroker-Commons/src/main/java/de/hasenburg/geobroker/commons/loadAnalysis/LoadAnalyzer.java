@@ -19,8 +19,6 @@ public class LoadAnalyzer {
     private String identity = "local-load-analyzer";
     private static Random rand = new Random(System.currentTimeMillis());
 
-    private static final String UTILIZATION = "UTILIZATION";
-    private static final String PING_REQ = "PING_REQ";
     private String brokerAddress = "";
     private String loadBalancerAddress = "";
 
@@ -37,29 +35,21 @@ public class LoadAnalyzer {
 
     public void handlePipeMessage(){
         ZMsg msg = ZMsg.recvMsg(pipe);
-        String command = msg.popString();
+        ControlPacketType msgType = ControlPacketType.valueOf(msg.getFirst().toString());
 
-        if (command.equals(UTILIZATION)) {
-            logger.info(msg);
-            msg.addFirst("TOPIC_METRICS");
-            sendMetrics(msg);
+        if (msgType == ControlPacketType.TOPIC_METRICS) {
+            msg.send(dealer);
         }
     }
 
-    public void initConnection(){
-        ZMsg msg = new ZMsg();
-        msg.add("ADD_SERVER");
-        msg.add(brokerAddress);
-        msg.send(dealer);
-    }
-
-    public void sendMetrics(ZMsg msg){
-        msg.send(dealer);
+    public void handleDealerMessage(){
+        ZMsg msg = ZMsg.recvMsg(dealer);
+        String command = msg.popString();
     }
 
     public void requestUtilization(){
         ZMsg msgRequest = new ZMsg();
-        msgRequest.add(UTILIZATION);
+        msgRequest.add(ControlPacketType.TOPIC_METRICS.toString());
         msgRequest.send(pipe);
     }
 

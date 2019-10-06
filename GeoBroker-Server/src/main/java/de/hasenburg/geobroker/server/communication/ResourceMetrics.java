@@ -54,6 +54,5 @@ public class ResourceMetrics {
 
     public synchronized static void clear() {
         publishedMessages.clear();
-        subscriptions.clear();
     }
 }
