@@ -22,3 +22,5 @@ The code found in this repository has been used for some expriments:
 - The original code for NoGEO experiments (geo-context information is not used) is accessible in the NoGEO branch or 
 release [v1.0-noContext](https://github.com/MoeweX/geobroker/releases/tag/v1.0-noContext).
 
+## What is this Fork?
+This Fork contains the source code for my Master's thesis 'Scaling GeoBroker Clusters Based on Local Sharding'. Currently, it is in an active development stage.
