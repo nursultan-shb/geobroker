@@ -15,6 +15,7 @@
         <module>GeoBroker-Commons</module>
         <module>GeoBroker-Server</module>
         <module>GeoBroker-Client</module>
+        <module>LoadBalancer</module>
     </modules>
 
     <properties>

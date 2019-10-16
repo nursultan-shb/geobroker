@@ -57,6 +57,12 @@
             <artifactId>GeoBroker-Client</artifactId>
             <version>${version}</version>
         </dependency>
+        <dependency>
+            <groupId>kg.shabykeev</groupId>
+            <artifactId>LoadBalancer-Commons</artifactId>
+            <version>1.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
 </project>

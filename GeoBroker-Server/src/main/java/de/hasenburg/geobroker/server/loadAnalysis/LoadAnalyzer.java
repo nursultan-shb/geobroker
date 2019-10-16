@@ -1,6 +1,6 @@
-package de.hasenburg.geobroker.commons.loadAnalysis;
+package de.hasenburg.geobroker.server.loadAnalysis;
 
-import de.hasenburg.geobroker.commons.model.message.ControlPacketType;
+import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.SocketType;
@@ -35,9 +35,9 @@ public class LoadAnalyzer {
 
     public void handlePipeMessage(){
         ZMsg msg = ZMsg.recvMsg(pipe);
-        ControlPacketType msgType = ControlPacketType.valueOf(msg.getFirst().toString());
+        ZMsgType msgType = ZMsgType.valueOf(msg.getFirst().toString());
 
-        if (msgType == ControlPacketType.TOPIC_METRICS) {
+        if (msgType == ZMsgType.TOPIC_METRICS) {
             msg.send(dealer);
         }
     }
@@ -49,7 +49,7 @@ public class LoadAnalyzer {
 
     public void requestUtilization(){
         ZMsg msgRequest = new ZMsg();
-        msgRequest.add(ControlPacketType.TOPIC_METRICS.toString());
+        msgRequest.add(ZMsgType.TOPIC_METRICS.toString());
         msgRequest.send(pipe);
     }
 
@@ -61,7 +61,7 @@ public class LoadAnalyzer {
     public void sendPing(){
         ZMsg msg = new ZMsg();
         msg.add(loadBalancerAddress.getBytes(ZMQ.CHARSET));
-        msg.add(ControlPacketType.PINGREQ.toString());
+        msg.add(ZMsgType.PINGREQ.toString());
         msg.send(pipe);
     }
 }

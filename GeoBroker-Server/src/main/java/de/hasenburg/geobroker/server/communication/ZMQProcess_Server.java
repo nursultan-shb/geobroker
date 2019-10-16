@@ -2,8 +2,8 @@ package de.hasenburg.geobroker.server.communication;
 
 import de.hasenburg.geobroker.commons.communication.ZMQControlUtility;
 import de.hasenburg.geobroker.commons.communication.ZMQProcess;
-import de.hasenburg.geobroker.commons.loadAnalysis.LoadAnalyzerAgent;
-import de.hasenburg.geobroker.commons.model.message.ControlPacketType;
+import de.hasenburg.geobroker.server.loadAnalysis.LoadAnalyzerAgent;
+import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.*;
@@ -122,7 +122,7 @@ class ZMQProcess_Server extends ZMQProcess {
 	}
 
 	private void handlePipeMessage(ZMsg msg){
-		ControlPacketType msgType = ControlPacketType.valueOf(msg.getLast().toString());
+		ZMsgType msgType = ZMsgType.valueOf(msg.getLast().toString());
 
 		switch (msgType){
 			case TOPIC_METRICS:
