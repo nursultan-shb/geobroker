@@ -1,9 +1,9 @@
-package ms.shabykeev.loadbalancer.plan.server;
+package kg.shabykeev.loadbalancer.plan.server;
 
 import de.hasenburg.geobroker.commons.communication.ZMQControlUtility;
 import de.hasenburg.geobroker.commons.communication.ZMQProcess;
-import ms.shabykeev.loadbalancer.common.ZMsgType;
-import ms.shabykeev.loadbalancer.plan.generator.GeneratorAgent;
+import kg.shabykeev.loadbalancer.commons.ZMsgType;
+import kg.shabykeev.loadbalancer.plan.generator.GeneratorAgent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.*;

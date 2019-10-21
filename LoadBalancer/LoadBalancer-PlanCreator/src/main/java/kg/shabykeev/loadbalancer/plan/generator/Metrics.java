@@ -6,8 +6,8 @@ import kg.shabykeev.loadbalancer.commons.TopicMetrics;
 import java.util.ArrayList;
 
 public class Metrics {
-    private ArrayList<ServerLoadMetrics> serverLoadMetrics;
-    private ArrayList<TopicMetrics> topicPubMetrics;
+    private ArrayList<ServerLoadMetrics> serverLoadMetrics = new ArrayList<>();
+    private ArrayList<TopicMetrics> topicPubMetrics = new ArrayList<>();
 
     public ArrayList<ServerLoadMetrics> getServerLoadMetrics() {
         return serverLoadMetrics;

@@ -16,7 +16,6 @@ public class MessageParser {
 
         ArrayList<ServerLoadMetrics> lmList = new ArrayList<>();
         ArrayList<TopicMetrics> topicPubMessagesList = new ArrayList<>();
-        ArrayList<TopicMetrics> topicSubMessagesList = new ArrayList<>();
 
         metrics = deleteEdgeSymbols(metrics.trim());
         String[] strValues = metrics.split("],");
@@ -33,7 +32,6 @@ public class MessageParser {
                 //parse topic metrics
                 if (elements.length > 4) {
                     topicPubMessagesList.addAll(parseTopicMetrics(elements[4], server));
-                    topicSubMessagesList.addAll(parseTopicMetrics(elements[5], server));
                 }
             }
         }
@@ -76,8 +74,8 @@ public class MessageParser {
      * Groups ServerLoadMetrics by a server and aggregates by max load.
      * Returns an aggregated by server a list of ServerLoadMetrics.
      *
-     * @param  lmList  a list of ServerLoadMetrics
-     * @return  ArrayList of ServerLoadMetrics grouped by a server
+     * @param lmList a list of ServerLoadMetrics
+     * @return ArrayList of ServerLoadMetrics grouped by a server
      */
     private static ArrayList<ServerLoadMetrics> aggregateServerLoadMetrics(ArrayList<ServerLoadMetrics> lmList) {
         ArrayList<ServerLoadMetrics> slAggMetrics = new ArrayList<>();
@@ -102,8 +100,8 @@ public class MessageParser {
      * thereby leaving only latest messages by a topic.
      * Returns an aggregated by server a list of TopicMetrics.
      *
-     * @param  tmList  a list of TopicMetrics
-     * @return  ArrayList of TopicMetrics grouped by a server
+     * @param tmList a list of TopicMetrics
+     * @return ArrayList of TopicMetrics grouped by a server
      */
     private static ArrayList<TopicMetrics> aggregateTopicMetrics(ArrayList<TopicMetrics> tmList) {
         ArrayList<TopicMetrics> topicAggMetrics = new ArrayList<>();

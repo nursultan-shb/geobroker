@@ -1,12 +1,11 @@
-package ms.shabykeev.loadbalancer.plan.server;
+package kg.shabykeev.loadbalancer.plan.server;
 
 import de.hasenburg.geobroker.commons.Utility;
 import de.hasenburg.geobroker.commons.communication.ZMQProcessManager;
-import ms.shabykeev.loadbalancer.common.server.Configuration;
-import ms.shabykeev.loadbalancer.common.server.IServerLogic;
+import kg.shabykeev.loadbalancer.commons.server.Configuration;
+import kg.shabykeev.loadbalancer.commons.server.IServerLogic;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

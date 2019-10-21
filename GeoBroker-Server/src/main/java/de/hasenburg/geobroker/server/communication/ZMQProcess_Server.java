@@ -154,8 +154,7 @@ class ZMQProcess_Server extends ZMQProcess {
 		msg.add(brokerIdentity);
 		//msg.add(String.valueOf(cpuUtilization));
 		msg.add(String.valueOf(80));
-		msg.add(String.valueOf(ResourceMetrics.getPublishedMessagesAsString()));
-		msg.add(String.valueOf(ResourceMetrics.getSubscriptionsAsString()));
+		msg.add(ResourceMetrics.getPublishedMessagesAsString());
 		ResourceMetrics.clear();
 
 		return msg;
