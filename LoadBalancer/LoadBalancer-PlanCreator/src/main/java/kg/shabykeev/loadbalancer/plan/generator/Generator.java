@@ -1,6 +1,10 @@
 package kg.shabykeev.loadbalancer.plan.generator;
 
+import de.hasenburg.geobroker.commons.model.KryoSerializer;
+import de.hasenburg.geobroker.commons.model.message.Payload;
+import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
+import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.SocketType;
@@ -9,8 +13,8 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 public class Generator extends Thread {
-
     private static final Logger logger = LogManager.getLogger();
+    private KryoSerializer kryo = new KryoSerializer();
 
     private ZContext ctx;
     public ZMQ.Socket pairSocket;
@@ -27,42 +31,49 @@ public class Generator extends Thread {
 
     @Override
     public void run() {
-        PlanCreator planCreator = new PlanCreator();
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZMsg msg = ZMsg.recvMsg(pairSocket);
-                ZMsgType msgType = ZMsgType.valueOf(msg.popString());
-                switch (msgType) {
-                    case TOPIC_METRICS:
-                        logger.info("Plan-Generator starts the plan creation");
-                        PlanResult planResult = planCreator.createPlan(msg.toString());
-                        if (planResult.isNewPlan()) {
-                            if (planResult.getTasks().size() > 0) {
-                                migrate(planResult);
-                            } else {
-                                releasePlan(planResult);
-                            }
-                        }
+                Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(msg, kryo);
+                if (pair != null) {
+                    String server = pair.getFirst();
+                    Payload payload = pair.getSecond();
 
-                        break;
-                    case ACK_TOPIC_MIGRATION:
-                        updateTask(msg);
-
-                        boolean allDone = !this.planResult.getTasks().stream().anyMatch(s->s.isDone() == false);
-                        if (allDone) {
-                            releasePlan(this.planResult);
-                        }
-                        break;
-                    default:
-                        logger.error("Cannot process message for a type {}, as this type is not known.", msgType);
-                        break;
+                    if (payload instanceof Payload.MetricsBulkAnalyzePayload) {
+                        processMetricsBulkAnalyzePayload((Payload.MetricsBulkAnalyzePayload) payload);
+                    } else if (payload instanceof Payload.TopicMigrateAckPayload) {
+                        processTopicMigrateAckPayload(server, (Payload.TopicMigrateAckPayload) payload);
+                    } else {
+                        logger.error("Cannot process message with a payload {}, as this type is not known.", payload);
+                    }
                 }
 
             } catch (Exception ex) {
                 logger.error(ex);
             }
+        }
+    }
 
+    private void processMetricsBulkAnalyzePayload(Payload.MetricsBulkAnalyzePayload payload) {
+        logger.info("Plan-Generator starts the plan creation");
+        PlanCreator planCreator = new PlanCreator();
+        PlanResult planResult = planCreator.createPlan(payload.getMetrics());
+        if (planResult.isNewPlan()) {
+            if (planResult.getTasks().size() > 0) {
+                migrate(planResult);
+            } else {
+                releasePlan(planResult);
+            }
+        }
+    }
+
+    private void processTopicMigrateAckPayload(String server, Payload.TopicMigrateAckPayload payload) {
+        updateTask(server, payload.getTopic());
+
+        boolean allDone = !this.planResult.getTasks().stream().anyMatch(s -> s.isDone() == false);
+        if (allDone) {
+            releasePlan(this.planResult);
         }
     }
 
@@ -78,11 +89,8 @@ public class Generator extends Thread {
     private void migrate(PlanResult planResult) {
         this.planResult = planResult;
         for (Task task : planResult.getTasks()) {
-            ZMsg msg = new ZMsg();
-            msg.add(ZMsgType.TOPIC_MIGRATION.toString());
-            msg.add(task.getServerSource());
-            msg.add(task.getTopic());
-            msg.add(task.getServerDestination());
+            Payload.TopicMigratePayload payload = new Payload.TopicMigratePayload(task.getTopic(), task.getServerDestination());
+            ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, task.getServerSource());
 
             msg.send(pairSocket);
         }
@@ -90,17 +98,12 @@ public class Generator extends Thread {
         logger.info("Migration tasks for the plan " + planResult.getPlanNumber() + " have been sent");
     }
 
-    private void updateTask(ZMsg msg){
-        String server = msg.popString();
-        String topic = msg.popString();
-
+    private void updateTask(String server, String topic) {
         for (Task task : planResult.getTasks()) {
             if (task.getTopic().equals(topic) && task.getServerSource().equals(server)) {
                 task.setDone(true);
                 break;
             }
         }
-
-        msg.destroy();
     }
 }

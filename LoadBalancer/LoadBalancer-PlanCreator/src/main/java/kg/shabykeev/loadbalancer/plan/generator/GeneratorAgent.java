@@ -14,6 +14,7 @@ public class GeneratorAgent implements ZThread.IAttachedRunnable {
 
     private Long planGenerationDelay = 20*1000L;
     private Long lastPlanGenerationTime = planGenerationDelay; //millis
+    private boolean isGeneratorBusy = false;
 
     private MessageProcessor messageProcessor;
 
@@ -38,13 +39,15 @@ public class GeneratorAgent implements ZThread.IAttachedRunnable {
             }
 
             if (poller.pollin(PAIR_SOCKET_INDEX)) {
+                isGeneratorBusy = false;
                 messageProcessor.sendPlan();
             }
 
-            if (System.currentTimeMillis() - lastPlanGenerationTime >= planGenerationDelay) {
+            if ((System.currentTimeMillis() - lastPlanGenerationTime >= planGenerationDelay) && !isGeneratorBusy) {
                 logger.info("time for sending metrics and plan generation");
                 messageProcessor.sendMetrics();
                 lastPlanGenerationTime = System.currentTimeMillis();
+                isGeneratorBusy = true;
             }
         }
     }

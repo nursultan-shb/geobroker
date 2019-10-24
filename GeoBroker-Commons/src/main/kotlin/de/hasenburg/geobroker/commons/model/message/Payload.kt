@@ -22,9 +22,13 @@ sealed class Payload {
     data class PUBLISHPayload(val topic: Topic, val geofence: Geofence, val content: String) : Payload()
     data class PUBACKPayload(val reasonCode: ReasonCode) : Payload()
     data class BrokerForwardDisconnectPayload(val clientIdentifier: String, val disconnectPayload: DISCONNECTPayload) :
-        Payload()
+            Payload()
 
     data class BrokerForwardPingreqPayload(val clientIdentifier: String, val pingreqPayload: PINGREQPayload) : Payload()
+    data class TopicMigratePayload(val topic: String, val destination: String) : Payload()
+    data class TopicMigrateAckPayload(val topic: String, val reasonCode: ReasonCode) : Payload()
+    data class MetricsBulkAnalyzePayload(val metrics: String) : Payload()
+
     /**
      * [publisherLocation] is needed in case of matching at the subscriber
      * [subscriberClientIdentifiers] is needed in case of matching at the publisher
@@ -34,7 +38,7 @@ sealed class Payload {
                                            val subscriberClientIdentifiers: List<String> = emptyList()) : Payload()
 
     data class BrokerForwardSubscribePayload(val clientIdentifier: String, val subscribePayload: SUBSCRIBEPayload) :
-        Payload()
+            Payload()
 
     data class BrokerForwardUnsubscribePayload(val clientIdentifier: String,
                                                val unsubscribePayload: UNSUBSCRIBEPayload) : Payload()
@@ -64,7 +68,13 @@ private enum class CPT {
     BrokerForwardPingreq, //
     BrokerForwardSubscribe, //
     BrokerForwardUnsubscribe, //
-    BrokerForwardPublish //
+    BrokerForwardPublish, //
+
+    //LoadBalancer
+    TopicMigrate,
+    TopicMigrateAck,
+    MetricsBulkAnalyze
+
 }
 
 /**
@@ -91,6 +101,9 @@ fun payloadToZMsg(payload: Payload, kryo: KryoSerializer, identifier: String? = 
         is Payload.BrokerForwardPublishPayload -> CPT.BrokerForwardPublish
         is Payload.BrokerForwardSubscribePayload -> CPT.BrokerForwardSubscribe
         is Payload.BrokerForwardUnsubscribePayload -> CPT.BrokerForwardUnsubscribe
+        is Payload.TopicMigratePayload -> CPT.TopicMigrate
+        is Payload.TopicMigrateAckPayload -> CPT.TopicMigrateAck
+        is Payload.MetricsBulkAnalyzePayload -> CPT.MetricsBulkAnalyze
     }
 
     return if (identifier == null) {
@@ -170,6 +183,9 @@ private fun KryoSerializer.read(arr: ByteArray, controlPacketType: CPT): Payload
         CPT.BrokerForwardUnsubscribe -> this.read(arr,
                 Payload.BrokerForwardUnsubscribePayload::class.java)
         CPT.BrokerForwardPublish -> this.read(arr, Payload.BrokerForwardPublishPayload::class.java)
+        CPT.TopicMigrate -> this.read(arr, Payload.TopicMigratePayload::class.java)
+        CPT.TopicMigrateAck -> this.read(arr, Payload.TopicMigrateAckPayload::class.java)
+        CPT.MetricsBulkAnalyze -> this.read(arr, Payload.MetricsBulkAnalyzePayload::class.java)
         else -> {
             logger.error("KryoSerializer has no implementation for control packet type $controlPacketType")
             null

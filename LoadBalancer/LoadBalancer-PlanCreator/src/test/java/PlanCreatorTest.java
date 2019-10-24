@@ -1,4 +1,5 @@
 import kg.shabykeev.loadbalancer.plan.generator.PlanCreator;
+import kg.shabykeev.loadbalancer.plan.generator.PlanResult;
 import org.junit.Assert;
 import org.junit.Test;
 import org.zeromq.ZMsg;
@@ -9,9 +10,9 @@ public class PlanCreatorTest {
     public void testOnlyIncomingServerLoadMetrics() {
         String message = "[[ local-load-analyzer 9AB1EBAC-DFBB0C48, TOPIC_METRICS, broker-server-2, 0.0,  ], [ local-load-analyzer 2E2F29A6-B5E43D79, TOPIC_METRICS, broker-server-1, 80,  ], [ local-load-analyzer 9AB1EBAC-DFBB0C48, TOPIC_METRICS, broker-server-2, 0.0,  ], [ local-load-analyzer 2E2F29A6-B5E43D79, TOPIC_METRICS, broker-server-1, 80,  ]]";
         PlanCreator planCreator = new PlanCreator();
-        boolean isNew = planCreator.createPlan(message);
+        PlanResult planResult = planCreator.createPlan(message);
 
-        Assert.assertFalse(isNew);
+        Assert.assertFalse(planResult.isNewPlan());
     }
 
     @Test

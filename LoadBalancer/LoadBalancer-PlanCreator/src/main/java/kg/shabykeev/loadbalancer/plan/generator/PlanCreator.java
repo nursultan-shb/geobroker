@@ -3,7 +3,6 @@ package kg.shabykeev.loadbalancer.plan.generator;
 import kg.shabykeev.loadbalancer.commons.Plan;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
 import kg.shabykeev.loadbalancer.commons.TopicMetrics;
-import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kg.shabykeev.loadbalancer.plan.util.MessageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -142,7 +141,7 @@ public class PlanCreator {
             if (slm.getLoad() >= SERVER_LOAD_THRESHOLD) {
                 TopicMetrics tm = getMostLoadedTopic(slm.getServer());
                 if (tm != null) {
-                    tasks.add(new Task(tm.getTopic(), tm.getServer(), leastLm.getServer(), ZMsgType.TOPIC_MIGRATION));
+                    tasks.add(new Task(tm.getTopic(), tm.getServer(), leastLm.getServer(), TaskType.MIGRATE));
 
                     tm.setServer(leastLm.getServer());
                     tm.setMessagesCount(0);

@@ -303,6 +303,46 @@ class KryoSerializer {
                 return UNSUBSCRIBEPayload(topic)
             }
         })
+        kryo.register(TopicMigratePayload::class.java, object : Serializer<TopicMigratePayload>() {
+            override fun write(kryo: Kryo, output: Output, o: TopicMigratePayload) {
+                kryo.writeObjectOrNull(output, o.topic, String::class.java)
+                kryo.writeObjectOrNull(output, o.destination, String::class.java)
+            }
+
+            override fun read(kryo: Kryo, input: Input,
+                              aClass: Class<out TopicMigratePayload>): TopicMigratePayload? {
+                val topic = kryo.readObjectOrNull(input, String::class.java) ?: return null
+                val destination = kryo.readObjectOrNull(input, String::class.java) ?: return null
+
+                return TopicMigratePayload(topic, destination)
+            }
+        })
+        kryo.register(TopicMigrateAckPayload::class.java, object : Serializer<TopicMigrateAckPayload>() {
+            override fun write(kryo: Kryo, output: Output, o: TopicMigrateAckPayload) {
+                kryo.writeObjectOrNull(output, o.topic, String::class.java)
+                kryo.writeObjectOrNull(output, o.reasonCode, ReasonCode::class.java)
+            }
+
+            override fun read(kryo: Kryo, input: Input,
+                              aClass: Class<out TopicMigrateAckPayload>): TopicMigrateAckPayload? {
+                val topic = kryo.readObjectOrNull(input, String::class.java) ?: return null
+                val reasonCode = kryo.readObjectOrNull(input, ReasonCode::class.java) ?: return null
+
+                return TopicMigrateAckPayload(topic, reasonCode)
+            }
+        })
+        kryo.register(MetricsBulkAnalyzePayload::class.java, object : Serializer<MetricsBulkAnalyzePayload>() {
+            override fun write(kryo: Kryo, output: Output, o: MetricsBulkAnalyzePayload) {
+                kryo.writeObjectOrNull(output, o.metrics, String::class.java)
+            }
+
+            override fun read(kryo: Kryo, input: Input,
+                              aClass: Class<out MetricsBulkAnalyzePayload>): MetricsBulkAnalyzePayload? {
+                val metrics = kryo.readObjectOrNull(input, String::class.java) ?: return null
+
+                return MetricsBulkAnalyzePayload(metrics)
+            }
+        })
 
     }
 

@@ -1,15 +1,13 @@
 package kg.shabykeev.loadbalancer.plan.generator;
 
-import kg.shabykeev.loadbalancer.commons.ZMsgType;
-
 public class Task {
     private String topic;
     private String serverSource;
     private String serverDestination;
-    private ZMsgType taskType;
+    private TaskType taskType;
     private boolean isDone = false;
 
-    public Task(String topic, String source, String destination, ZMsgType taskType) {
+    public Task(String topic, String source, String destination, TaskType taskType) {
         this.topic = topic;
         this.serverSource = source;
         this.serverDestination = destination;
@@ -40,11 +38,11 @@ public class Task {
         this.topic = topic;
     }
 
-    public ZMsgType getTaskType() {
+    public TaskType getTaskType() {
         return taskType;
     }
 
-    public void setTaskType(ZMsgType taskType) {
+    public void setTaskType(TaskType taskType) {
         this.taskType = taskType;
     }
 

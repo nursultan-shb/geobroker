@@ -1,5 +1,8 @@
 package kg.shabykeev.loadbalancer.plan.messageProcessor;
 
+import de.hasenburg.geobroker.commons.model.KryoSerializer;
+import de.hasenburg.geobroker.commons.model.message.Payload;
+import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.SocketType;
@@ -11,6 +14,7 @@ import java.util.LinkedList;
 
 public class MessageProcessor {
     private static final Logger logger = LogManager.getLogger();
+    private KryoSerializer kryo = new KryoSerializer();
     private LinkedList<ZMsg> msgQueue = new LinkedList<>();
 
     private ZContext ctx;
@@ -36,13 +40,14 @@ public class MessageProcessor {
     }
 
     public void sendMetrics(){
-        String metrics = msgQueue.toString();
-        msgQueue.clear();
+        if (msgQueue.size() > 0) {
+            String metrics = msgQueue.toString();
+            msgQueue.clear();
 
-        ZMsg msg = new ZMsg();
-        msg.add(metrics);
-        msg.send(this.pairSocket);
-        logger.info("queue is empty");
+            Payload.MetricsBulkAnalyzePayload payload = new Payload.MetricsBulkAnalyzePayload(metrics);
+            ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, this.pairSocket.getLastEndpoint());
+            msg.send(this.pairSocket);
+            logger.info("queue is empty");
+        }
     }
-
 }
