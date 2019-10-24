@@ -11,7 +11,10 @@ public enum ZMsgType {
     ACKREG_LOAD_BALANCER,
 
     PINGREQ,
-    PINGRESP
+    PINGRESP,
+
+    TOPIC_MIGRATION,
+    ACK_TOPIC_MIGRATION
 
 
 

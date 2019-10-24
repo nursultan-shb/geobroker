@@ -3,6 +3,7 @@ package kg.shabykeev.loadbalancer.plan.generator;
 import kg.shabykeev.loadbalancer.commons.Plan;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
 import kg.shabykeev.loadbalancer.commons.TopicMetrics;
+import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kg.shabykeev.loadbalancer.plan.util.MessageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,12 +11,13 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 
 public class PlanCreator {
     private static final Logger logger = LogManager.getLogger();
     private static final Double SERVER_LOAD_THRESHOLD = 5D;
 
-    public Integer planNumber = 0;
+    private Integer planNumber = 0;
     private ArrayList<ServerLoadMetrics> serverLoadMetrics = new ArrayList<>();
 
     /**
@@ -38,6 +40,8 @@ public class PlanCreator {
      */
     private HashMap<String, String> topicServerMap = new HashMap<>();
 
+    private List<Task> tasks = new ArrayList<>();
+
 
     /**
      * Creates a plan based on incoming metrics
@@ -45,23 +49,26 @@ public class PlanCreator {
      * @param metrics ServerLoadMetrics and TopicMetrics of GeoBroker
      * @return whether a plan is new and should be broadcasted
      */
-    public boolean createPlan(String metrics) {
-        boolean isNew = false;
+    public PlanResult createPlan(String metrics) {
+        PlanResult result = new PlanResult();
 
         if (metrics.length() > 3) {
             parseMessages(metrics);
             ArrayList<Plan> newPlans = getPlan();
             if (newPlans != null) {
-                isNew = mergePlan(newPlans);
+                boolean isNew = mergePlan(newPlans) || tasks.size() > 0; //there might be completely new high load topics that do no exist in planMap yet
 
                 if (isNew) {
-                    planNumber++;
+                    result.setNewPlan(true);
+                    result.setPlanNumber(planNumber++);
+                    result.setTasks(tasks);
                 }
-
             }
+
+            result.setPlan(getPlanAsString());
         }
 
-        return isNew;
+        return result;
     }
 
     /**
@@ -69,7 +76,7 @@ public class PlanCreator {
      *
      * @return the current actual plan as a String
      */
-    public String getPlanAsString() {
+    private String getPlanAsString() {
         /*
         String listString = plans.stream().map(Plan::toString)
                 .collect(Collectors.joining(", "));
@@ -135,6 +142,8 @@ public class PlanCreator {
             if (slm.getLoad() >= SERVER_LOAD_THRESHOLD) {
                 TopicMetrics tm = getMostLoadedTopic(slm.getServer());
                 if (tm != null) {
+                    tasks.add(new Task(tm.getTopic(), tm.getServer(), leastLm.getServer(), ZMsgType.TOPIC_MIGRATION));
+
                     tm.setServer(leastLm.getServer());
                     tm.setMessagesCount(0);
                 }
@@ -175,5 +184,6 @@ public class PlanCreator {
         topicPubMessages.clear();
         topicSubMessages.clear();
         serverLoadMetrics.clear();
+        tasks.clear();
     }
 }
