@@ -12,8 +12,7 @@ public class Agent implements ZThread.IAttachedRunnable {
 
     private final int PIPE_INDEX = 0;
     private final int DEALER_INDEX = 1;
-    private Long lastRegistrationCheckTime = 0L;
-
+    private Long lastPlanCreatorPingTime = 0L;
 
     @Override
     public void run(Object[] args, ZContext context, ZMQ.Socket pipe) {
@@ -36,9 +35,9 @@ public class Agent implements ZThread.IAttachedRunnable {
                 stateManager.handleDealerMessage();
             }
 
-            if (System.currentTimeMillis() - lastRegistrationCheckTime >= 5000 && !stateManager.isRegisteredInPlanCreator()) {
-                stateManager.register();
-                lastRegistrationCheckTime = System.currentTimeMillis();
+            if (System.currentTimeMillis() - lastPlanCreatorPingTime >= 15000) {
+                stateManager.ping();
+                lastPlanCreatorPingTime = System.currentTimeMillis();
             }
         }
     }

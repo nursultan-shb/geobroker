@@ -10,6 +10,7 @@ import de.hasenburg.geobroker.commons.model.message.Topic
 import de.hasenburg.geobroker.commons.model.spatial.Geofence
 import de.hasenburg.geobroker.commons.model.spatial.Location
 import org.apache.logging.log4j.LogManager
+import org.zeromq.ZMsg
 
 
 private val logger = LogManager.getLogger()
@@ -333,14 +334,66 @@ class KryoSerializer {
         })
         kryo.register(MetricsBulkAnalyzePayload::class.java, object : Serializer<MetricsBulkAnalyzePayload>() {
             override fun write(kryo: Kryo, output: Output, o: MetricsBulkAnalyzePayload) {
-                kryo.writeObjectOrNull(output, o.metrics, String::class.java)
+                for (metric in o.metrics) {
+                    kryo.writeObjectOrNull(output, metric, ZMsg::class.java)
+                }
             }
 
             override fun read(kryo: Kryo, input: Input,
                               aClass: Class<out MetricsBulkAnalyzePayload>): MetricsBulkAnalyzePayload? {
-                val metrics = kryo.readObjectOrNull(input, String::class.java) ?: return null
+                val metrics = mutableListOf<ZMsg>()
+                while (!input.end()) {
+                    val sci = kryo.readObjectOrNull(input, ZMsg::class.java)
+                    if (sci != null) {
+                        metrics.add(sci)
+                    }
+                }
 
                 return MetricsBulkAnalyzePayload(metrics)
+            }
+        })
+        kryo.register(PlanPayload::class.java, object : Serializer<PlanPayload>() {
+            override fun write(kryo: Kryo, output: Output, o: PlanPayload) {
+                for ((k, v) in o.planMap) {
+                    kryo.writeObjectOrNull(output, k, String::class.java)
+                    kryo.writeObjectOrNull(output, v, String::class.java)
+                }
+            }
+
+            override fun read(kryo: Kryo, input: Input,
+                              aClass: Class<out PlanPayload>): PlanPayload? {
+                val planMap = mutableMapOf<String, String>()
+                while (!input.end()) {
+                    val k = kryo.readObjectOrNull(input, String::class.java)
+                    val v = kryo.readObjectOrNull(input, String::class.java)
+                    if (k != null) {
+                        planMap.put(k, v)
+                    }
+                }
+                return PlanPayload(planMap)
+            }
+        })
+        kryo.register(MetricsPayload::class.java, object : Serializer<MetricsPayload>() {
+            override fun write(kryo: Kryo, output: Output, o: MetricsPayload) {
+                kryo.writeObjectOrNull(output, o.cpuLoad, Double::class.java)
+                for ((k, v) in o.publishedMessages) {
+                    kryo.writeObjectOrNull(output, k, Topic::class.java)
+                    kryo.writeObjectOrNull(output, v, Int::class.java)
+                }
+            }
+
+            override fun read(kryo: Kryo, input: Input,
+                              aClass: Class<out MetricsPayload>): MetricsPayload? {
+                val cpuLoad = kryo.readObjectOrNull(input, Double::class.java) ?: return null
+                val publishedMessages = mutableMapOf<Topic, Int>()
+                while (!input.end()) {
+                    val k = kryo.readObjectOrNull(input, Topic::class.java)
+                    val v = kryo.readObjectOrNull(input, Int::class.java)
+                    if (k != null) {
+                        publishedMessages.put(k, v)
+                    }
+                }
+                return MetricsPayload(cpuLoad, publishedMessages)
             }
         })
 

@@ -1,7 +1,10 @@
 package kg.shabykeev.loadbalancer.server;
 
+import de.hasenburg.geobroker.commons.model.KryoSerializer;
+import de.hasenburg.geobroker.commons.model.message.Payload;
+import de.hasenburg.geobroker.commons.model.message.PayloadKt;
+import de.hasenburg.geobroker.commons.model.spatial.Location;
 import kg.shabykeev.loadbalancer.commons.util.ZHelper;
-import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.SocketType;
@@ -11,55 +14,45 @@ import org.zeromq.ZMsg;
 
 public class StateManager {
     private static final Logger logger = LogManager.getLogger();
+    private KryoSerializer kryo = new KryoSerializer();
 
     private ZContext ctx;
 
     private String planCreatorAddress = "tcp://127.0.0.1:7000";
 
-    public Boolean isRegisteredInPlanCreator() {
-        return isRegisteredInPlanCreator;
-    }
-
-    private Boolean isRegisteredInPlanCreator = false;
-
     public ZMQ.Socket pipe;
 
     public ZMQ.Socket dealer;
 
-    public StateManager(ZContext ctx, ZMQ.Socket pipe){
+    public StateManager(ZContext ctx, ZMQ.Socket pipe) {
         this.ctx = ctx;
         this.pipe = pipe;
         this.dealer = ctx.createSocket(SocketType.DEALER);
     }
 
-    public void connectSockets(){
+    public void connectSockets() {
         ZHelper.setId("LB-Agent-Dealer", this.dealer);
         this.dealer.connect(planCreatorAddress);
     }
 
-    public void handlePipeMessage(){
+    public void handlePipeMessage() {
     }
 
-    public void handleDealerMessage(){
+    public void handleDealerMessage() {
         ZMsg msg = ZMsg.recvMsg(dealer);
-        ZMsgType msgType = ZMsgType.valueOf(msg.popString());
-        switch (msgType){
-            case ACKREG_LOAD_BALANCER:
-                this.isRegisteredInPlanCreator = true;
-                if (msg.size() > 2){
-                    msg.send(pipe);
-                }
+        Payload payload = PayloadKt.transformZMsg(msg, kryo);
+        if (payload != null) {
+            if (payload instanceof Payload.PINGRESPPayload) {
 
-                break;
-            case PLAN:
+            } else if (payload instanceof Payload.PlanPayload) {
                 msg.send(pipe);
-                break;
+            }
         }
     }
 
-    public void register(){
-        ZMsg msg = new ZMsg();
-        msg.add(ZMsgType.REG_LOAD_BALANCER.toString());
+    public void ping() {
+        Payload.PINGREQPayload payload = new Payload.PINGREQPayload(Location.random());
+        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);
         msg.send(dealer);
     }
 }

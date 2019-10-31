@@ -10,7 +10,9 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 public class MessageProcessor {
     private static final Logger logger = LogManager.getLogger();
@@ -41,10 +43,10 @@ public class MessageProcessor {
 
     public void sendMetrics(){
         if (msgQueue.size() > 0) {
-            String metrics = msgQueue.toString();
+            List<ZMsg> messages = new ArrayList<ZMsg>(msgQueue);
             msgQueue.clear();
 
-            Payload.MetricsBulkAnalyzePayload payload = new Payload.MetricsBulkAnalyzePayload(metrics);
+            Payload.MetricsBulkAnalyzePayload payload = new Payload.MetricsBulkAnalyzePayload(messages);
             ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, this.pairSocket.getLastEndpoint());
             msg.send(this.pairSocket);
             logger.info("queue is empty");

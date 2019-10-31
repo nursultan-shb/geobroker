@@ -6,6 +6,7 @@ import kg.shabykeev.loadbalancer.commons.TopicMetrics;
 import kg.shabykeev.loadbalancer.plan.util.MessageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.zeromq.ZMsg;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -41,20 +42,19 @@ public class PlanCreator {
 
     private List<Task> tasks = new ArrayList<>();
 
-
     /**
      * Creates a plan based on incoming metrics
      *
      * @param metrics ServerLoadMetrics and TopicMetrics of GeoBroker
      * @return whether a plan is new and should be broadcasted
      */
-    public PlanResult createPlan(String metrics) {
+    public PlanResult createPlan(List<ZMsg> metrics) {
         PlanResult result = new PlanResult();
 
-        if (metrics.length() > 3) {
+        if (metrics.size() > 0) {
             parseMessages(metrics);
             ArrayList<Plan> newPlans = getPlan();
-            if (newPlans != null) {
+            if (newPlans.size() > 0) {
                 boolean isNew = mergePlan(newPlans) || tasks.size() > 0; //there might be completely new high load topics that do no exist in planMap yet
 
                 if (isNew) {
@@ -64,26 +64,8 @@ public class PlanCreator {
                 }
             }
 
-            result.setPlan(getPlanAsString());
+            result.setPlan(planMap);
         }
-
-        return result;
-    }
-
-    /**
-     * Returns the current actual plan from PlanMap as a String
-     *
-     * @return the current actual plan as a String
-     */
-    private String getPlanAsString() {
-        /*
-        String listString = plans.stream().map(Plan::toString)
-                .collect(Collectors.joining(", "));
-        */
-
-        StringBuilder sb = new StringBuilder();
-        planMap.forEach((k, v) -> sb.append(String.format(k + "=" + v + "|")));
-        String result = sb.length() > 0 ? sb.substring(0, sb.length() - 1).trim() : "";
 
         return result;
     }
@@ -113,13 +95,10 @@ public class PlanCreator {
         return isNew;
     }
 
-
-    private void parseMessages(String message) {
-        if (message.length() <= 3) return;
-
+    private void parseMessages(List<ZMsg> messages) {
         clearData();
 
-        Metrics metrics = MessageParser.parseMessage(message);
+        Metrics metrics = MessageParser.parseMessage(messages);
         serverLoadMetrics.addAll(metrics.getServerLoadMetrics());
         topicPubMessages.addAll(metrics.getTopicPubMetrics());
     }

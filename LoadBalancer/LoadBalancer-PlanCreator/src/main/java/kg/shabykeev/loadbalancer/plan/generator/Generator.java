@@ -3,7 +3,6 @@ package kg.shabykeev.loadbalancer.plan.generator;
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
-import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,6 +18,7 @@ public class Generator extends Thread {
     private ZContext ctx;
     public ZMQ.Socket pairSocket;
 
+    PlanCreator planCreator = new PlanCreator();
     private PlanResult planResult = null;
 
     public Generator(ZContext context, String socketAddress) {
@@ -56,8 +56,7 @@ public class Generator extends Thread {
     }
 
     private void processMetricsBulkAnalyzePayload(Payload.MetricsBulkAnalyzePayload payload) {
-        logger.info("Plan-Generator starts the plan creation");
-        PlanCreator planCreator = new PlanCreator();
+        logger.info("Plan-Generator starts the plan creation");;
         PlanResult planResult = planCreator.createPlan(payload.getMetrics());
         if (planResult.isNewPlan()) {
             if (planResult.getTasks().size() > 0) {
@@ -78,9 +77,9 @@ public class Generator extends Thread {
     }
 
     private void releasePlan(PlanResult planResult) {
-        ZMsg msg = new ZMsg();
-        msg.add(ZMsgType.PLAN.toString());
-        msg.add(planResult.getPlan());
+        Payload.PlanPayload payload = new Payload.PlanPayload(planResult.getPlan());
+        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, pairSocket.getLastEndpoint());
+
         msg.send(pairSocket);
         logger.info("Plan " + planResult.getPlanNumber() + " has been released");
         this.planResult = null;

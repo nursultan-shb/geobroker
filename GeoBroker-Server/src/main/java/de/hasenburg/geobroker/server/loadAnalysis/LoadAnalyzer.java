@@ -34,12 +34,9 @@ public class LoadAnalyzer {
     }
 
     public void handlePipeMessage(){
+        //metrics
         ZMsg msg = ZMsg.recvMsg(pipe);
-        ZMsgType msgType = ZMsgType.valueOf(msg.getFirst().toString());
-
-        if (msgType == ZMsgType.TOPIC_METRICS) {
-            msg.send(dealer);
-        }
+        msg.send(dealer);
     }
 
     public void handleDealerMessage(){

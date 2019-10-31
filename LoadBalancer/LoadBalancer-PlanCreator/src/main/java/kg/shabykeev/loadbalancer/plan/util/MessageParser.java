@@ -1,9 +1,15 @@
 package kg.shabykeev.loadbalancer.plan.util;
 
+import de.hasenburg.geobroker.commons.model.KryoSerializer;
+import de.hasenburg.geobroker.commons.model.message.Payload;
+import de.hasenburg.geobroker.commons.model.message.PayloadKt;
+import de.hasenburg.geobroker.commons.model.message.Topic;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
 import kg.shabykeev.loadbalancer.commons.TopicMetrics;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kg.shabykeev.loadbalancer.plan.generator.Metrics;
+import kotlin.Pair;
+import org.zeromq.ZMsg;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -11,6 +17,37 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.groupingBy;
 
 public class MessageParser {
+
+    private static KryoSerializer kryo = new KryoSerializer();
+
+    public static Metrics parseMessage(List<ZMsg> messages) {
+        ArrayList<ServerLoadMetrics> lmList = new ArrayList<>();
+        ArrayList<TopicMetrics> topicPubMessagesList = new ArrayList<>();
+
+        for (ZMsg message : messages) {
+            Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(message, kryo);
+            if (pair != null) {
+                String server = pair.getFirst();
+                Payload payload = pair.getSecond();
+
+                if (payload instanceof Payload.MetricsPayload) {
+                    Payload.MetricsPayload metricsPayload = (Payload.MetricsPayload) payload;
+                    ServerLoadMetrics slm = new ServerLoadMetrics(server, null, metricsPayload.getCpuLoad());
+                    lmList.add(slm);
+
+                    //parse topic metrics
+                    if (metricsPayload.getPublishedMessages().size() > 0) {
+                        for (Map.Entry<Topic, Integer> entry : metricsPayload.getPublishedMessages().entrySet()) {
+
+                            topicPubMessagesList.add(new TopicMetrics(server, entry.getKey().getTopic(), entry.getValue()));
+                        }
+                    }
+                }
+            }
+        }
+
+        return new Metrics(aggregateServerLoadMetrics(lmList), aggregateTopicMetrics(topicPubMessagesList));
+    }
 
     public static Metrics parseMessage(String metrics) {
 
@@ -50,10 +87,8 @@ public class MessageParser {
 
         for (String pair : keyValuePairs) {
             String[] entry = pair.split("=");
-            TopicMetrics tm = new TopicMetrics();
-            tm.setServer(server);
-            tm.setTopic(entry[0].trim());
-            tm.setMessagesCount(Integer.valueOf(entry[1].trim()));
+            TopicMetrics tm = new TopicMetrics(server, entry[0].trim(), Integer.valueOf(entry[1].trim()));
+
             tmList.add(tm);
         }
 

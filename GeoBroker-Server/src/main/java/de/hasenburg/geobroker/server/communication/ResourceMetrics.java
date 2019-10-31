@@ -2,6 +2,7 @@ package de.hasenburg.geobroker.server.communication;
 
 import de.hasenburg.geobroker.commons.model.message.Topic;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ResourceMetrics {
@@ -33,6 +34,10 @@ public class ResourceMetrics {
                 subscriptions.put(topic, mc - 1);
             }
         }
+    }
+
+    public synchronized static Map<Topic, Integer> getPublishedMessages(){
+        return publishedMessages;
     }
 
 

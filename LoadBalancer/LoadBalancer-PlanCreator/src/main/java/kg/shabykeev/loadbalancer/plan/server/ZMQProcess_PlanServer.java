@@ -2,17 +2,25 @@ package kg.shabykeev.loadbalancer.plan.server;
 
 import de.hasenburg.geobroker.commons.communication.ZMQControlUtility;
 import de.hasenburg.geobroker.commons.communication.ZMQProcess;
-import kg.shabykeev.loadbalancer.commons.ZMsgType;
+import de.hasenburg.geobroker.commons.model.KryoSerializer;
+import de.hasenburg.geobroker.commons.model.message.Payload;
+import de.hasenburg.geobroker.commons.model.message.PayloadKt;
+import de.hasenburg.geobroker.commons.model.message.ReasonCode;
 import kg.shabykeev.loadbalancer.plan.generator.GeneratorAgent;
+import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ZMQProcess_PlanServer extends ZMQProcess {
 
     private static final Logger logger = LogManager.getLogger();
+    private KryoSerializer kryo = new KryoSerializer();
 
     private String frontendAddress = "tcp://127.0.0.1:6061";
     private String backendAddress = "tcp://127.0.0.1:6062";
@@ -32,7 +40,6 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
     private Integer planGenerationDelay = 0;
 
 
-
     ZMQProcess_PlanServer(String address, int frontendPort, int backendPort, String serverId, Integer planGenerationDelay) {
         super(getServerIdentity(serverId));
         this.frontendAddress = address + ":" + frontendPort;
@@ -50,7 +57,7 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
                 handleFrontendMessages(msg);
                 break;
             case METRICS_PIPE_INDEX:
-                handleMetricsPipeMessage(msg);
+                handlePipeMessage(msg);
                 break;
             default:
                 logger.error("Cannot process message for socket at index {}, as this index is not known.", socketIndex);
@@ -84,39 +91,34 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
         return Arrays.asList(socketArray);
     }
 
-    private void handleBackendMessages(ZMsg msg){
-        forwardToMetricsPipe(msg);
-    }
-
-    private void handleFrontendMessages(ZMsg msg){
-        String sender = msg.popString();
-        String msgType = msg.popString();
-
-        if (msgType.equals(ZMsgType.REG_LOAD_BALANCER.toString())){
-            loadBalancers.add(sender);
-
-            ZMsg ack = new ZMsg();
-            ack.add(sender);
-            ack.add(ZMsgType.ACKREG_LOAD_BALANCER.toString());
-            if (plan != null){
-                ack.add(plan);
-            }
-            ack.send(frontend);
-            msg.destroy();
-        }
-    }
-
-    private void forwardToMetricsPipe(ZMsg msg){
+    private void handleBackendMessages(ZMsg msg) {
         msg.send(metrics_pipe);
     }
 
-    private void handleMetricsPipeMessage(ZMsg msg){
-        String msgType = msg.getFirst().toString();
+    private void handleFrontendMessages(ZMsg msg) {
+        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(msg, kryo);
+        if (pair != null) {
+            Payload payload = pair.getSecond();
+            if (payload instanceof Payload.PINGREQPayload) {
+                loadBalancers.add(pair.getFirst());
 
-        if (msgType.equals(ZMsgType.PLAN.toString())){
-            for(String lbId: loadBalancers){
-                msg.push(lbId);
-                msg.send(frontend);
+                Payload.PINGRESPPayload respPayload = new Payload.PINGRESPPayload(ReasonCode.Success);
+                ZMsg respMsg = PayloadKt.payloadToZMsg(respPayload, kryo, pair.getFirst());
+
+                respMsg.send(frontend);
+            }
+        }
+    }
+
+    private void handlePipeMessage(ZMsg msg) {
+        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(msg, kryo);
+        if (pair != null) {
+            Payload payload = pair.getSecond();
+            if (payload instanceof Payload.PlanPayload) {
+                for (String lbId : loadBalancers) {
+                    msg.push(lbId);
+                    msg.send(frontend);
+                }
             }
         }
     }

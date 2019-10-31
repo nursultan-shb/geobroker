@@ -1,13 +1,15 @@
 package kg.shabykeev.loadbalancer.plan.generator;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PlanResult {
     private List<Task> tasks;
     private boolean isNewPlan = false;
     private int planNumber = 0;
-    private String plan = "";
+    private Map<String, String> plan = new HashMap<>();
 
     public List<Task> getTasks() {
         return tasks;
@@ -33,12 +35,13 @@ public class PlanResult {
         this.planNumber = planNumber;
     }
 
-    public String getPlan() {
+    public Map<String, String> getPlan() {
         return plan;
     }
 
-    public void setPlan(String plan) {
-        plan = plan;
+    public void setPlan(Map<String, String> plan) {
+        plan.clear();
+        plan.putAll(plan);
     }
 
 }

@@ -26,7 +26,14 @@ public class TopicMetrics {
         this.messagesCount = messagesCount;
     }
 
+    public TopicMetrics(String server, String topic, Integer messagesCount) {
+        this.server = server;
+        this.topic = topic;
+        this.messagesCount = messagesCount;
+    }
+
     private String server;
     private String topic;
     private Integer messagesCount;
+
 }

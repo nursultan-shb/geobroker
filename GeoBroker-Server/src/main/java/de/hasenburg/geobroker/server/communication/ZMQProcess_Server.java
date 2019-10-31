@@ -2,6 +2,9 @@ package de.hasenburg.geobroker.server.communication;
 
 import de.hasenburg.geobroker.commons.communication.ZMQControlUtility;
 import de.hasenburg.geobroker.commons.communication.ZMQProcess;
+import de.hasenburg.geobroker.commons.model.KryoSerializer;
+import de.hasenburg.geobroker.commons.model.message.Payload;
+import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.server.loadAnalysis.LoadAnalyzerAgent;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +18,7 @@ import java.util.List;
 class ZMQProcess_Server extends ZMQProcess {
 
 	private static final Logger logger = LogManager.getLogger();
+	private KryoSerializer kryo = new KryoSerializer();
 
 	// Address and port of server frontend
 	private String ip;
@@ -45,7 +49,6 @@ class ZMQProcess_Server extends ZMQProcess {
 	public static String getServerIdentity(String brokerId) {
 		return brokerId + "-server";
 	}
-
 
 	@Override
 	protected List<Socket> bindAndConnectSockets(ZContext context) {
@@ -126,8 +129,8 @@ class ZMQProcess_Server extends ZMQProcess {
 
 		switch (msgType){
 			case TOPIC_METRICS:
-				msg = addUtilizationInfo(msg);
-				if (!msg.send(sockets.get(PIPE_INDEX))) {
+				ZMsg metricsMsg = getLoadMetrics();
+				if (!metricsMsg.send(sockets.get(PIPE_INDEX))) {
 					logger.warn("Dropping client request as HWM reached.");
 				}
 				break;
@@ -150,13 +153,11 @@ class ZMQProcess_Server extends ZMQProcess {
 		logger.info("Shut down ZMQProcess_Server {}", getServerIdentity(identity));
 	}
 
-	private ZMsg addUtilizationInfo(ZMsg msg){
-		msg.add(brokerIdentity);
-		//msg.add(String.valueOf(cpuUtilization));
-		msg.add(String.valueOf(80));
-		msg.add(ResourceMetrics.getPublishedMessagesAsString());
-		ResourceMetrics.clear();
+	private ZMsg getLoadMetrics(){
+		Payload.MetricsPayload payload = new Payload.MetricsPayload(cpuUtilization, ResourceMetrics.getPublishedMessages());
+		ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, this.brokerIdentity);
 
+		ResourceMetrics.clear();
 		return msg;
 	}
 }
