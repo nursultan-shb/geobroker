@@ -3,12 +3,12 @@ package kg.shabykeev.loadbalancer.plan.util;
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
-import de.hasenburg.geobroker.commons.model.message.Topic;
+import de.hasenburg.geobroker.commons.model.message.TopicMetrics;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
-import kg.shabykeev.loadbalancer.commons.TopicMetrics;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kg.shabykeev.loadbalancer.plan.generator.Metrics;
 import kotlin.Pair;
+import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;
 
 import java.util.*;
@@ -20,27 +20,25 @@ public class MessageParser {
 
     private static KryoSerializer kryo = new KryoSerializer();
 
-    public static Metrics parseMessage(List<ZMsg> messages) {
+    public static Metrics parseMessage(List<String> messages) {
         ArrayList<ServerLoadMetrics> lmList = new ArrayList<>();
         ArrayList<TopicMetrics> topicPubMessagesList = new ArrayList<>();
 
-        for (ZMsg message : messages) {
+        for (String msg : messages) {
+            ZMsg message = parseStringIntoMessage(msg);
             Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(message, kryo);
             if (pair != null) {
-                String server = pair.getFirst();
+                String localLoadAnalyzer = pair.getFirst();
                 Payload payload = pair.getSecond();
 
                 if (payload instanceof Payload.MetricsPayload) {
-                    Payload.MetricsPayload metricsPayload = (Payload.MetricsPayload) payload;
-                    ServerLoadMetrics slm = new ServerLoadMetrics(server, null, metricsPayload.getCpuLoad());
+                    Payload.MetricsPayload mp = (Payload.MetricsPayload) payload;
+                    ServerLoadMetrics slm = new ServerLoadMetrics(mp.getBrokerId(), localLoadAnalyzer, mp.getCpuLoad());
                     lmList.add(slm);
 
                     //parse topic metrics
-                    if (metricsPayload.getPublishedMessages().size() > 0) {
-                        for (Map.Entry<Topic, Integer> entry : metricsPayload.getPublishedMessages().entrySet()) {
-
-                            topicPubMessagesList.add(new TopicMetrics(server, entry.getKey().getTopic(), entry.getValue()));
-                        }
+                    if (mp.getPublishedMessages().size() > 0) {
+                        topicPubMessagesList.addAll(mp.getPublishedMessages());
                     }
                 }
             }
@@ -74,6 +72,27 @@ public class MessageParser {
         }
 
         return new Metrics(aggregateServerLoadMetrics(lmList), aggregateTopicMetrics(topicPubMessagesList));
+    }
+
+    private static ZMsg parseStringIntoMessage(String str){
+        ZMsg msg = new ZMsg();
+        str = replaceSpecialCharacters(str).trim();
+        String[] frames = str.split(",");
+        for (String frame: frames) {
+            msg.add(frame.trim());
+        }
+
+        ZFrame lastFrame = msg.pollLast();
+        String[] strBytes = lastFrame.toString().split(";");
+        byte[] bytes = new byte[strBytes.length];
+
+        for(int i=0; i<bytes.length; i++) {
+            bytes[i] = Byte.parseByte(strBytes[i].trim());
+        }
+
+        msg.addLast(new ZFrame(bytes));
+
+        return msg;
     }
 
     private static ArrayList<TopicMetrics> parseTopicMetrics(String value, String server) {

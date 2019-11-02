@@ -1,4 +1,4 @@
-package kg.shabykeev.loadbalancer.commons;
+package de.hasenburg.geobroker.commons.model.message;
 
 public class TopicMetrics {
 
@@ -35,5 +35,4 @@ public class TopicMetrics {
     private String server;
     private String topic;
     private Integer messagesCount;
-
 }

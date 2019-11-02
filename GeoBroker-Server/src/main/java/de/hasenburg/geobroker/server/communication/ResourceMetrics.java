@@ -1,8 +1,10 @@
 package de.hasenburg.geobroker.server.communication;
 
 import de.hasenburg.geobroker.commons.model.message.Topic;
+import de.hasenburg.geobroker.commons.model.message.TopicMetrics;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ResourceMetrics {
@@ -36,8 +38,11 @@ public class ResourceMetrics {
         }
     }
 
-    public synchronized static Map<Topic, Integer> getPublishedMessages(){
-        return publishedMessages;
+    public synchronized static List<TopicMetrics> getPublishedMessages(){
+        List<TopicMetrics> tm = new ArrayList<>();
+        publishedMessages.forEach((k,v) -> tm.add(new TopicMetrics(null, k.getTopic(), v)));
+
+        return tm;
     }
 
 

@@ -40,8 +40,8 @@ public class Generator extends Thread {
                     String server = pair.getFirst();
                     Payload payload = pair.getSecond();
 
-                    if (payload instanceof Payload.MetricsBulkAnalyzePayload) {
-                        processMetricsBulkAnalyzePayload((Payload.MetricsBulkAnalyzePayload) payload);
+                    if (payload instanceof Payload.MetricsAnalyzePayload) {
+                        processMetricsBulkAnalyzePayload((Payload.MetricsAnalyzePayload) payload);
                     } else if (payload instanceof Payload.TopicMigrateAckPayload) {
                         processTopicMigrateAckPayload(server, (Payload.TopicMigrateAckPayload) payload);
                     } else {
@@ -55,8 +55,7 @@ public class Generator extends Thread {
         }
     }
 
-    private void processMetricsBulkAnalyzePayload(Payload.MetricsBulkAnalyzePayload payload) {
-        logger.info("Plan-Generator starts the plan creation");;
+    private void processMetricsBulkAnalyzePayload(Payload.MetricsAnalyzePayload payload) {
         PlanResult planResult = planCreator.createPlan(payload.getMetrics());
         if (planResult.isNewPlan()) {
             if (planResult.getTasks().size() > 0) {

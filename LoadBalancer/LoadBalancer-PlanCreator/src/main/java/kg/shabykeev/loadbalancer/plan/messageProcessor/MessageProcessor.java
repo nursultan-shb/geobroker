@@ -5,12 +5,10 @@ import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.zeromq.SocketType;
-import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
-import org.zeromq.ZMsg;
+import org.zeromq.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,13 +41,21 @@ public class MessageProcessor {
 
     public void sendMetrics(){
         if (msgQueue.size() > 0) {
-            List<ZMsg> messages = new ArrayList<ZMsg>(msgQueue);
+            List<String> messages = new ArrayList<>();
+
+            for (ZMsg message: msgQueue) {
+                ZFrame lastFrame = message.pollLast();
+                String strBytes = Arrays.toString(lastFrame.getData());
+                String value = strBytes.replace(",", ";").replace("[", "").replace("]", "");
+                message.addLast(value);
+            }
+
+            msgQueue.stream().forEach(s->messages.add(s.toString()));
             msgQueue.clear();
 
-            Payload.MetricsBulkAnalyzePayload payload = new Payload.MetricsBulkAnalyzePayload(messages);
+            Payload.MetricsAnalyzePayload payload = new Payload.MetricsAnalyzePayload(messages);
             ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, this.pairSocket.getLastEndpoint());
             msg.send(this.pairSocket);
-            logger.info("queue is empty");
         }
     }
 }

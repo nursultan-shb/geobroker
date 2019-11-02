@@ -1,12 +1,11 @@
 package kg.shabykeev.loadbalancer.plan.generator;
 
+import de.hasenburg.geobroker.commons.model.message.TopicMetrics;
 import kg.shabykeev.loadbalancer.commons.Plan;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
-import kg.shabykeev.loadbalancer.commons.TopicMetrics;
 import kg.shabykeev.loadbalancer.plan.util.MessageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.zeromq.ZMsg;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -15,7 +14,7 @@ import java.util.List;
 
 public class PlanCreator {
     private static final Logger logger = LogManager.getLogger();
-    private static final Double SERVER_LOAD_THRESHOLD = 5D;
+    private static final Double SERVER_LOAD_THRESHOLD = 60D;
 
     private Integer planNumber = 0;
     private ArrayList<ServerLoadMetrics> serverLoadMetrics = new ArrayList<>();
@@ -48,7 +47,7 @@ public class PlanCreator {
      * @param metrics ServerLoadMetrics and TopicMetrics of GeoBroker
      * @return whether a plan is new and should be broadcasted
      */
-    public PlanResult createPlan(List<ZMsg> metrics) {
+    public PlanResult createPlan(List<String> metrics) {
         PlanResult result = new PlanResult();
 
         if (metrics.size() > 0) {
@@ -95,7 +94,7 @@ public class PlanCreator {
         return isNew;
     }
 
-    private void parseMessages(List<ZMsg> messages) {
+    private void parseMessages(List<String> messages) {
         clearData();
 
         Metrics metrics = MessageParser.parseMessage(messages);
@@ -114,6 +113,7 @@ public class PlanCreator {
             return newPlans;
         }
 
+        logger.info("Plan creation has been started");
         ServerLoadMetrics leastLm = getLeastLoadedServer();
 
         for (ServerLoadMetrics slm : serverLoadMetrics) {
@@ -121,7 +121,6 @@ public class PlanCreator {
                 TopicMetrics tm = getMostLoadedTopic(slm.getServer());
                 if (tm != null) {
                     tasks.add(new Task(tm.getTopic(), tm.getServer(), leastLm.getServer(), TaskType.MIGRATE));
-
                     tm.setServer(leastLm.getServer());
                     tm.setMessagesCount(0);
                 }
@@ -138,9 +137,7 @@ public class PlanCreator {
      * @return ServerLoadMetrics of the least loaded server
      */
     private ServerLoadMetrics getLeastLoadedServer() {
-        ServerLoadMetrics slm = serverLoadMetrics.stream()
-                .min(Comparator.comparing(ServerLoadMetrics::getLoad)).get();
-
+        ServerLoadMetrics slm = serverLoadMetrics.stream().min(Comparator.comparing(ServerLoadMetrics::getLoad)).get();
         return slm;
     }
 

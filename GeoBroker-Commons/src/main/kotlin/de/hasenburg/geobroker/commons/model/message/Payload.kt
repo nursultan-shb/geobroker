@@ -29,9 +29,9 @@ sealed class Payload {
     //LoadBalancer
     data class TopicMigratePayload(val topic: String, val destination: String) : Payload()
     data class TopicMigrateAckPayload(val topic: String, val reasonCode: ReasonCode) : Payload()
-    data class MetricsBulkAnalyzePayload(val metrics: List<ZMsg> = emptyList()) : Payload()
+    data class MetricsAnalyzePayload(val metrics: List<String> = emptyList()) : Payload()
     data class PlanPayload(val planMap: Map<String, String> = emptyMap()) : Payload()
-    data class MetricsPayload(val cpuLoad: Double, val publishedMessages: Map<Topic, Int> = emptyMap()) : Payload()
+    data class MetricsPayload(val brokerId: String, val cpuLoad: Double, val publishedMessages: List<TopicMetrics> = emptyList()) : Payload()
 
     /**
      * [publisherLocation] is needed in case of matching at the subscriber
@@ -77,7 +77,7 @@ private enum class CPT {
     //LoadBalancer
     TopicMigrate,
     TopicMigrateAck,
-    MetricsBulkAnalyze,
+    MetricsAnalyze,
     Plan,
     Metrics
 
@@ -109,7 +109,7 @@ fun payloadToZMsg(payload: Payload, kryo: KryoSerializer, identifier: String? = 
         is Payload.BrokerForwardUnsubscribePayload -> CPT.BrokerForwardUnsubscribe
         is Payload.TopicMigratePayload -> CPT.TopicMigrate
         is Payload.TopicMigrateAckPayload -> CPT.TopicMigrateAck
-        is Payload.MetricsBulkAnalyzePayload -> CPT.MetricsBulkAnalyze
+        is Payload.MetricsAnalyzePayload -> CPT.MetricsAnalyze
         is Payload.PlanPayload -> CPT.Plan
         is Payload.MetricsPayload -> CPT.Metrics
     }
@@ -193,7 +193,7 @@ private fun KryoSerializer.read(arr: ByteArray, controlPacketType: CPT): Payload
         CPT.BrokerForwardPublish -> this.read(arr, Payload.BrokerForwardPublishPayload::class.java)
         CPT.TopicMigrate -> this.read(arr, Payload.TopicMigratePayload::class.java)
         CPT.TopicMigrateAck -> this.read(arr, Payload.TopicMigrateAckPayload::class.java)
-        CPT.MetricsBulkAnalyze -> this.read(arr, Payload.MetricsBulkAnalyzePayload::class.java)
+        CPT.MetricsAnalyze -> this.read(arr, Payload.MetricsAnalyzePayload::class.java)
         CPT.Plan -> this.read(arr, Payload.PlanPayload::class.java)
         CPT.Metrics -> this.read(arr, Payload.MetricsPayload::class.java)
         else -> {

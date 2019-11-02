@@ -39,15 +39,12 @@ public class GeneratorAgent implements ZThread.IAttachedRunnable {
             }
 
             if (poller.pollin(PAIR_SOCKET_INDEX)) {
-                isGeneratorBusy = false;
                 messageProcessor.sendPlan();
             }
 
-            if ((System.currentTimeMillis() - lastPlanGenerationTime >= planGenerationDelay) && !isGeneratorBusy) {
-                logger.info("time for sending metrics and plan generation");
+            if ((System.currentTimeMillis() - lastPlanGenerationTime >= planGenerationDelay) ) {
                 messageProcessor.sendMetrics();
                 lastPlanGenerationTime = System.currentTimeMillis();
-                isGeneratorBusy = true;
             }
         }
     }
