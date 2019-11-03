@@ -130,7 +130,8 @@ class ZMQProcess_Server extends ZMQProcess {
 
         switch (msgType) {
             case TOPIC_METRICS:
-                ZMsg metricsMsg = getLoadMetrics();
+                String localLoadAnalyzerId = msg.getFirst().toString();
+                ZMsg metricsMsg = getLoadMetrics(localLoadAnalyzerId);
                 if (!metricsMsg.send(sockets.get(PIPE_INDEX))) {
                     logger.warn("Dropping client request as HWM reached.");
                 }
@@ -154,18 +155,11 @@ class ZMQProcess_Server extends ZMQProcess {
         logger.info("Shut down ZMQProcess_Server {}", getServerIdentity(identity));
     }
 
-    private ZMsg getLoadMetrics() {
-        Payload.MetricsPayload payload = new Payload.MetricsPayload(this.brokerIdentity, 80, ResourceMetrics.getPublishedMessages());
-        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);
-
+    private ZMsg getLoadMetrics(String localLoadAnalyzerId) {
+        Payload.MetricsPayload payload = new Payload.MetricsPayload(this.brokerIdentity, 80, ResourceMetrics.getPublishedMessages(this.brokerIdentity));
+        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, localLoadAnalyzerId);
         ResourceMetrics.clear();
-        /*
-        byte[] b1 = new byte[] {1, -126, 49};
-        String str = new String(b1);
-        ZFrame frame = new ZFrame(b1);
-        ZFrame zFrame = new ZFrame("018231");
-        */
-        //Pair<String, Payload> pair1 = PayloadKt.transformZMsgWithId(msg, kryo);
+
         return msg;
     }
 }

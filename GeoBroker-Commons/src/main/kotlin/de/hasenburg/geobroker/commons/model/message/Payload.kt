@@ -30,8 +30,9 @@ sealed class Payload {
     data class TopicMigratePayload(val topic: String, val destination: String) : Payload()
     data class TopicMigrateAckPayload(val topic: String, val reasonCode: ReasonCode) : Payload()
     data class MetricsAnalyzePayload(val metrics: List<String> = emptyList()) : Payload()
-    data class PlanPayload(val planMap: Map<String, String> = emptyMap()) : Payload()
+    data class PlanPayload(val plan: List<Plan> = emptyList()) : Payload()
     data class MetricsPayload(val brokerId: String, val cpuLoad: Double, val publishedMessages: List<TopicMetrics> = emptyList()) : Payload()
+    data class PlanResultPayload(val planResult: PlanResult ) : Payload()
 
     /**
      * [publisherLocation] is needed in case of matching at the subscriber
@@ -79,7 +80,8 @@ private enum class CPT {
     TopicMigrateAck,
     MetricsAnalyze,
     Plan,
-    Metrics
+    Metrics,
+    PlanResult
 
 }
 
@@ -112,6 +114,7 @@ fun payloadToZMsg(payload: Payload, kryo: KryoSerializer, identifier: String? = 
         is Payload.MetricsAnalyzePayload -> CPT.MetricsAnalyze
         is Payload.PlanPayload -> CPT.Plan
         is Payload.MetricsPayload -> CPT.Metrics
+        is Payload.PlanResultPayload -> CPT.PlanResult
     }
 
     return if (identifier == null) {
@@ -196,6 +199,7 @@ private fun KryoSerializer.read(arr: ByteArray, controlPacketType: CPT): Payload
         CPT.MetricsAnalyze -> this.read(arr, Payload.MetricsAnalyzePayload::class.java)
         CPT.Plan -> this.read(arr, Payload.PlanPayload::class.java)
         CPT.Metrics -> this.read(arr, Payload.MetricsPayload::class.java)
+        CPT.PlanResult -> this.read(arr, Payload.PlanResultPayload::class.java)
         else -> {
             logger.error("KryoSerializer has no implementation for control packet type $controlPacketType")
             null

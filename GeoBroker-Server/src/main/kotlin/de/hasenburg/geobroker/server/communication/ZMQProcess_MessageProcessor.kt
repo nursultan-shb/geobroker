@@ -144,6 +144,7 @@ class ZMQProcess_MessageProcessor(private val brokerId: String, private val numb
                         clientsSocket,
                         brokersSocket,
                         kryo)
+                is Payload.TopicMigratePayload -> ma
                 is Payload.CONNACKPayload -> logger.warn("CONNACK messages are ignored by server")
                 is Payload.PINGRESPPayload -> logger.warn("PINGRESP messages are ignored by server")
                 is Payload.SUBACKPayload -> logger.warn("SUBACK messages are ignored by server")

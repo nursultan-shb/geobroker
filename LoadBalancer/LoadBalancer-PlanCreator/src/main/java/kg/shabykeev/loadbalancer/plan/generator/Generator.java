@@ -1,8 +1,7 @@
 package kg.shabykeev.loadbalancer.plan.generator;
 
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
-import de.hasenburg.geobroker.commons.model.message.Payload;
-import de.hasenburg.geobroker.commons.model.message.PayloadKt;
+import de.hasenburg.geobroker.commons.model.message.*;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +18,6 @@ public class Generator extends Thread {
     public ZMQ.Socket pairSocket;
 
     PlanCreator planCreator = new PlanCreator();
-    private PlanResult planResult = null;
 
     public Generator(ZContext context, String socketAddress) {
         this.ctx = context;
@@ -31,19 +29,15 @@ public class Generator extends Thread {
 
     @Override
     public void run() {
-
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 ZMsg msg = ZMsg.recvMsg(pairSocket);
                 Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(msg, kryo);
                 if (pair != null) {
-                    String server = pair.getFirst();
                     Payload payload = pair.getSecond();
 
                     if (payload instanceof Payload.MetricsAnalyzePayload) {
-                        processMetricsBulkAnalyzePayload((Payload.MetricsAnalyzePayload) payload);
-                    } else if (payload instanceof Payload.TopicMigrateAckPayload) {
-                        processTopicMigrateAckPayload(server, (Payload.TopicMigrateAckPayload) payload);
+                        processMetricsAnalyzePayload((Payload.MetricsAnalyzePayload) payload);
                     } else {
                         logger.error("Cannot process message with a payload {}, as this type is not known.", payload);
                     }
@@ -55,53 +49,11 @@ public class Generator extends Thread {
         }
     }
 
-    private void processMetricsBulkAnalyzePayload(Payload.MetricsAnalyzePayload payload) {
+    private void processMetricsAnalyzePayload(Payload.MetricsAnalyzePayload payload) {
         PlanResult planResult = planCreator.createPlan(payload.getMetrics());
-        if (planResult.isNewPlan()) {
-            if (planResult.getTasks().size() > 0) {
-                migrate(planResult);
-            } else {
-                releasePlan(planResult);
-            }
-        }
-    }
-
-    private void processTopicMigrateAckPayload(String server, Payload.TopicMigrateAckPayload payload) {
-        updateTask(server, payload.getTopic());
-
-        boolean allDone = !this.planResult.getTasks().stream().anyMatch(s -> s.isDone() == false);
-        if (allDone) {
-            releasePlan(this.planResult);
-        }
-    }
-
-    private void releasePlan(PlanResult planResult) {
-        Payload.PlanPayload payload = new Payload.PlanPayload(planResult.getPlan());
-        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, pairSocket.getLastEndpoint());
+        Payload.PlanResultPayload resultPayload = new Payload.PlanResultPayload(planResult);
+        ZMsg msg = PayloadKt.payloadToZMsg(resultPayload, kryo, null);
 
         msg.send(pairSocket);
-        logger.info("Plan " + planResult.getPlanNumber() + " has been released");
-        this.planResult = null;
-    }
-
-    private void migrate(PlanResult planResult) {
-        this.planResult = planResult;
-        for (Task task : planResult.getTasks()) {
-            Payload.TopicMigratePayload payload = new Payload.TopicMigratePayload(task.getTopic(), task.getServerDestination());
-            ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, task.getServerSource());
-
-            msg.send(pairSocket);
-        }
-
-        logger.info("Migration tasks for the plan " + planResult.getPlanNumber() + " have been sent");
-    }
-
-    private void updateTask(String server, String topic) {
-        for (Task task : planResult.getTasks()) {
-            if (task.getTopic().equals(topic) && task.getServerSource().equals(server)) {
-                task.setDone(true);
-                break;
-            }
-        }
     }
 }

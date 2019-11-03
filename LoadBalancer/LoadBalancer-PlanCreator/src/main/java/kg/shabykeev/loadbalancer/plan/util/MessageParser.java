@@ -8,6 +8,8 @@ import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kg.shabykeev.loadbalancer.plan.generator.Metrics;
 import kotlin.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;
 
@@ -19,29 +21,35 @@ import static java.util.stream.Collectors.groupingBy;
 public class MessageParser {
 
     private static KryoSerializer kryo = new KryoSerializer();
+    private static final Logger logger = LogManager.getLogger();
 
     public static Metrics parseMessage(List<String> messages) {
         ArrayList<ServerLoadMetrics> lmList = new ArrayList<>();
         ArrayList<TopicMetrics> topicPubMessagesList = new ArrayList<>();
 
-        for (String msg : messages) {
-            ZMsg message = parseStringIntoMessage(msg);
-            Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(message, kryo);
-            if (pair != null) {
-                String localLoadAnalyzer = pair.getFirst();
-                Payload payload = pair.getSecond();
+        try {
+            for (String msg : messages) {
+                ZMsg message = parseStringIntoMessage(msg);
+                Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(message, kryo);
+                if (pair != null) {
+                    String localLoadAnalyzer = pair.getFirst();
+                    Payload payload = pair.getSecond();
 
-                if (payload instanceof Payload.MetricsPayload) {
-                    Payload.MetricsPayload mp = (Payload.MetricsPayload) payload;
-                    ServerLoadMetrics slm = new ServerLoadMetrics(mp.getBrokerId(), localLoadAnalyzer, mp.getCpuLoad());
-                    lmList.add(slm);
+                    if (payload instanceof Payload.MetricsPayload) {
+                        Payload.MetricsPayload mp = (Payload.MetricsPayload) payload;
+                        ServerLoadMetrics slm = new ServerLoadMetrics(mp.getBrokerId(), localLoadAnalyzer, mp.getCpuLoad());
+                        lmList.add(slm);
 
-                    //parse topic metrics
-                    if (mp.getPublishedMessages().size() > 0) {
-                        topicPubMessagesList.addAll(mp.getPublishedMessages());
+                        //parse topic metrics
+                        if (mp.getPublishedMessages().size() > 0) {
+                            topicPubMessagesList.addAll(mp.getPublishedMessages());
+                        }
                     }
                 }
             }
+        }
+        catch (Exception e) {
+            logger.error(e.getMessage());
         }
 
         return new Metrics(aggregateServerLoadMetrics(lmList), aggregateTopicMetrics(topicPubMessagesList));

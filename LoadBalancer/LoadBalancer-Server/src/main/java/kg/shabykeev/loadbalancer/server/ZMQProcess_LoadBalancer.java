@@ -49,7 +49,7 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
 
         planMap.put("red", "broker-server-1");
         planMap.put("rose", "broker-server-1");
-        planMap.put("blue", "broker-server-1");
+        planMap.put("blue", "broker-server-2");
         planMap.put("ocean", "broker-server-1");
     }
 
@@ -114,8 +114,9 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
                 msgCopy.send(sockets.get(BACKEND_INDEX));
             } else {
                 for (String broker : brokers) {
-                    msgCopy.push(broker);
-                    msgCopy.send(sockets.get(BACKEND_INDEX));
+                    ZMsg m = msgCopy.duplicate();
+                    m.push(broker);
+                    m.send(sockets.get(BACKEND_INDEX));
                 }
             }
         }

@@ -1,11 +1,13 @@
-package kg.shabykeev.loadbalancer.plan.generator;
+package kg.shabykeev.loadbalancer.plan.messageProcessor;
 
-import kg.shabykeev.loadbalancer.plan.messageProcessor.MessageProcessor;
+import kg.shabykeev.loadbalancer.plan.generator.Generator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.zeromq.*;
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
+import org.zeromq.ZThread;
 
-public class GeneratorAgent implements ZThread.IAttachedRunnable {
+public class MessageProcessorAgent implements ZThread.IAttachedRunnable {
     private static final Logger logger = LogManager.getLogger();
 
     // socket indices
@@ -22,7 +24,6 @@ public class GeneratorAgent implements ZThread.IAttachedRunnable {
 
     @Override
     public void run(Object[] args, ZContext context, ZMQ.Socket pipe) {
-
         messageProcessor = new MessageProcessor(context, pipe, PAIR_SOCKET_ADDRESS);
         Generator generator = new Generator(context, PAIR_SOCKET_ADDRESS);
         generator.start();
@@ -39,7 +40,7 @@ public class GeneratorAgent implements ZThread.IAttachedRunnable {
             }
 
             if (poller.pollin(PAIR_SOCKET_INDEX)) {
-                messageProcessor.sendPlan();
+                messageProcessor.processPairSocketMessage();
             }
 
             if ((System.currentTimeMillis() - lastPlanGenerationTime >= planGenerationDelay) ) {

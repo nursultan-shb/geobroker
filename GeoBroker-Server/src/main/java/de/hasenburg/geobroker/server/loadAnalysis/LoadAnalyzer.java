@@ -16,7 +16,8 @@ public class LoadAnalyzer {
     private ZContext ctx;      //  Own context
     public ZMQ.Socket pipe;     //  Socket to talk back to application
     public ZMQ.Socket dealer;
-    private String identity = "local-load-analyzer";
+    private String baseIdentity = "local-load-analyzer";
+    private String identity;
     private static Random rand = new Random(System.currentTimeMillis());
 
     private String brokerAddress = "";
@@ -27,8 +28,8 @@ public class LoadAnalyzer {
         this.ctx = ctx;
         this.pipe = pipe;
         dealer = ctx.createSocket(SocketType.DEALER);
-        setIdentity(dealer);
-        Thread.currentThread().setName(identity);
+        identity = setIdentity(dealer);
+        Thread.currentThread().setName(baseIdentity);
         this.brokerAddress = brokerAddress;
         this.loadBalancerAddress = loadBalancerAddress;
     }
@@ -41,18 +42,20 @@ public class LoadAnalyzer {
 
     public void handleDealerMessage(){
         ZMsg msg = ZMsg.recvMsg(dealer);
-        String command = msg.popString();
+        msg.send(pipe);
     }
 
     public void requestUtilization(){
         ZMsg msgRequest = new ZMsg();
+        msgRequest.add(this.identity);
         msgRequest.add(ZMsgType.TOPIC_METRICS.toString());
         msgRequest.send(pipe);
     }
 
-    private void setIdentity(ZMQ.Socket socket){
+    private String setIdentity(ZMQ.Socket socket){
         String id = String.format(identity + " %04X-%04X", rand.nextInt(), rand.nextInt());
         socket.setIdentity(id.getBytes(ZMQ.CHARSET));
+        return id;
     }
 
     public void sendPing(){

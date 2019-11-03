@@ -2,6 +2,8 @@ package de.hasenburg.geobroker.server.communication;
 
 import de.hasenburg.geobroker.commons.model.message.Topic;
 import de.hasenburg.geobroker.commons.model.message.TopicMetrics;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ResourceMetrics {
     static ConcurrentHashMap<Topic, Integer> publishedMessages = new ConcurrentHashMap<>();
-    static ConcurrentHashMap<Topic, Integer> subscriptions = new ConcurrentHashMap<>();
+    private static final Logger logger = LogManager.getLogger();
 
     public synchronized static void setPublishedMessages(Topic topic, Integer messagesCount) {
         if (publishedMessages.containsKey(topic)) {
@@ -20,28 +22,9 @@ public class ResourceMetrics {
         }
     }
 
-    public synchronized static void addSubscription(Topic topic) {
-        if (subscriptions.containsKey(topic)) {
-            Integer mc = subscriptions.get(topic);
-            subscriptions.put(topic, mc + 1);
-        } else {
-            subscriptions.put(topic, 1);
-        }
-    }
-
-    public synchronized static void removeSubscription(Topic topic) {
-        if (subscriptions.containsKey(topic)) {
-            Integer mc = subscriptions.get(topic);
-            if (mc > 0) {
-                subscriptions.put(topic, mc - 1);
-            }
-        }
-    }
-
-    public synchronized static List<TopicMetrics> getPublishedMessages(){
+    public synchronized static List<TopicMetrics> getPublishedMessages(String brokerId){
         List<TopicMetrics> tm = new ArrayList<>();
-        publishedMessages.forEach((k,v) -> tm.add(new TopicMetrics(null, k.getTopic(), v)));
-
+        publishedMessages.forEach((k,v) -> tm.add(new TopicMetrics(brokerId, k.getTopic(), v)));
         return tm;
     }
 
@@ -49,14 +32,6 @@ public class ResourceMetrics {
     public synchronized static String getPublishedMessagesAsString() {
         StringBuilder sb = new StringBuilder();
         publishedMessages.forEach((k, v) -> sb.append(String.format(k + "=" + v + "|")));
-        String result = sb.length() > 0 ? sb.substring(0, sb.length() - 1).trim() : "";
-
-        return result;
-    }
-
-    public synchronized static String getSubscriptionsAsString() {
-        StringBuilder sb = new StringBuilder();
-        subscriptions.forEach((k, v) -> sb.append(String.format(k + "=" + v + "|")));
         String result = sb.length() > 0 ? sb.substring(0, sb.length() - 1).trim() : "";
 
         return result;

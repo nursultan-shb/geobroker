@@ -1,7 +1,10 @@
 package de.hasenburg.geobroker.server.matching
 
 import de.hasenburg.geobroker.commons.model.KryoSerializer
-import de.hasenburg.geobroker.commons.model.message.*
+import de.hasenburg.geobroker.commons.model.message.Payload
+import de.hasenburg.geobroker.commons.model.message.ReasonCode
+import de.hasenburg.geobroker.commons.model.message.Topic
+import de.hasenburg.geobroker.commons.model.message.payloadToZMsg
 import de.hasenburg.geobroker.commons.model.spatial.Geofence
 import de.hasenburg.geobroker.commons.model.spatial.Location
 import de.hasenburg.geobroker.server.storage.TopicAndGeofenceMapper
@@ -50,6 +53,8 @@ interface IMatchingLogic {
 
     fun processBrokerForwardPublish(otherBrokerId: String, payload: Payload.BrokerForwardPublishPayload,
                                     clients: Socket, brokers: Socket, kryo: KryoSerializer)
+
+    fun processTopicSubscribersReq()
 
 }
 

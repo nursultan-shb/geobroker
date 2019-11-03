@@ -4,6 +4,7 @@ import de.hasenburg.geobroker.commons.model.KryoSerializer
 import de.hasenburg.geobroker.commons.model.message.Payload.*
 import de.hasenburg.geobroker.commons.model.message.ReasonCode
 import de.hasenburg.geobroker.commons.model.message.payloadToZMsg
+import de.hasenburg.geobroker.server.communication.ResourceMetrics
 import de.hasenburg.geobroker.server.storage.TopicAndGeofenceMapper
 import de.hasenburg.geobroker.server.storage.client.ClientDirectory
 import org.apache.logging.log4j.LogManager
@@ -105,6 +106,8 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
                     logger,
                     kryo)
         }
+
+        ResourceMetrics.setPublishedMessages(payload.topic, 1);
 
         // send response to publisher
         val response = payloadToZMsg(PUBACKPayload(reasonCode), kryo, clientIdentifier)

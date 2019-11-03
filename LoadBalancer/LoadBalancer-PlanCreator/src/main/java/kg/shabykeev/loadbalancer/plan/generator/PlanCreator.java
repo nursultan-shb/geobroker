@@ -1,16 +1,12 @@
 package kg.shabykeev.loadbalancer.plan.generator;
 
-import de.hasenburg.geobroker.commons.model.message.TopicMetrics;
-import kg.shabykeev.loadbalancer.commons.Plan;
+import de.hasenburg.geobroker.commons.model.message.*;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
 import kg.shabykeev.loadbalancer.plan.util.MessageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class PlanCreator {
     private static final Logger logger = LogManager.getLogger();
@@ -63,7 +59,7 @@ public class PlanCreator {
                 }
             }
 
-            result.setPlan(planMap);
+            result.setPlan(convertToPlanList(planMap));
         }
 
         return result;
@@ -120,7 +116,7 @@ public class PlanCreator {
             if (slm.getLoad() >= SERVER_LOAD_THRESHOLD) {
                 TopicMetrics tm = getMostLoadedTopic(slm.getServer());
                 if (tm != null) {
-                    tasks.add(new Task(tm.getTopic(), tm.getServer(), leastLm.getServer(), TaskType.MIGRATE));
+                    tasks.add(new Task(tm.getTopic(), slm.getLocalLoadAnalyzer(), leastLm.getServer(), TaskType.MIGRATE, false));
                     tm.setServer(leastLm.getServer());
                     tm.setMessagesCount(0);
                 }
@@ -152,6 +148,12 @@ public class PlanCreator {
                 .max(Comparator.comparing(TopicMetrics::getMessagesCount)).orElse(null);
 
         return tm;
+    }
+
+    private List<Plan> convertToPlanList(Map<String, String> planMap) {
+        List<Plan> plan = new ArrayList<>();
+        planMap.forEach((k,v) -> plan.add(new Plan(k, v)));
+        return plan;
     }
 
     private void clearData() {

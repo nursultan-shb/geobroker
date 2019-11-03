@@ -1,4 +1,4 @@
-package kg.shabykeev.loadbalancer.plan.generator;
+package de.hasenburg.geobroker.commons.model.message;
 
 public class Task {
     private String topic;
@@ -7,11 +7,12 @@ public class Task {
     private TaskType taskType;
     private boolean isDone = false;
 
-    public Task(String topic, String source, String destination, TaskType taskType) {
+    public Task(String topic, String source, String destination, TaskType taskType, boolean isDone) {
         this.topic = topic;
         this.serverSource = source;
         this.serverDestination = destination;
         this.taskType = taskType;
+        this.isDone = isDone;
     }
 
     public String getServerSource() {
@@ -53,6 +54,4 @@ public class Task {
     public void setDone(boolean done) {
         isDone = done;
     }
-
-
 }

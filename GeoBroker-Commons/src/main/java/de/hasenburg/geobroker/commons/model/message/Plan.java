@@ -1,4 +1,4 @@
-package kg.shabykeev.loadbalancer.commons;
+package de.hasenburg.geobroker.commons.model.message;
 
 public class Plan {
     public Plan(String topic, String server){
@@ -29,5 +29,4 @@ public class Plan {
     public String toString(){
         return topic + ":" + server;
     }
-
 }
