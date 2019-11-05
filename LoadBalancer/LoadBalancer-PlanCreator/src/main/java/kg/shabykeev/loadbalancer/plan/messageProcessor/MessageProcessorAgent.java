@@ -36,7 +36,7 @@ public class MessageProcessorAgent implements ZThread.IAttachedRunnable {
             poller.poll(100);
 
             if (poller.pollin(PIPE_INDEX)) {
-                messageProcessor.addMessage();
+                messageProcessor.processPipeMessage();
             }
 
             if (poller.pollin(PAIR_SOCKET_INDEX)) {

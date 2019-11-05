@@ -2,6 +2,7 @@ package kg.shabykeev.loadbalancer.plan.generator;
 
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.*;
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.PlanResult;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

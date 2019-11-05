@@ -144,4 +144,18 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
                                              clients: Socket, brokers: Socket, kryo: KryoSerializer) {
         logger.warn("Unsupported operation, message is discarded")
     }
+
+    /*****************************************************************
+     * LoadBalancer Methods
+     ****************************************************************/
+
+    override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqTopicSubscriptionsPayload,
+                                              clients: Socket, kryo: KryoSerializer) {
+        //val subscriptions = clientDirectory.getTopicSubscriptions(payload.topic)
+        val subscriptions = mutableListOf<String>()
+        val response = payloadToZMsg(ReqTopicSubscriptionsAckPayload(payload.topic, subscriptions), kryo, planCreatorId)
+        sendResponse(response, clients)
+
+        logger.debug("Requested topic subscriptions: topic {}, size of subscriptions {}", payload.topic, subscriptions.size)
+    }
 }

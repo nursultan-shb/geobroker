@@ -1,6 +1,6 @@
 package kg.shabykeev.loadbalancer.plan.generator;
 
-import de.hasenburg.geobroker.commons.model.message.TopicMetrics;
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.TopicMetrics;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
 
 import java.util.ArrayList;

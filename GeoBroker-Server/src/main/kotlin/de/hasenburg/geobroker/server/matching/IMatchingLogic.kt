@@ -54,7 +54,8 @@ interface IMatchingLogic {
     fun processBrokerForwardPublish(otherBrokerId: String, payload: Payload.BrokerForwardPublishPayload,
                                     clients: Socket, brokers: Socket, kryo: KryoSerializer)
 
-    fun processTopicSubscribersReq()
+    fun processReqTopicSubscriptions(planCreatorId: String, payload: Payload.ReqTopicSubscriptionsPayload,
+                                     clients: Socket, kryo: KryoSerializer)
 
 }
 

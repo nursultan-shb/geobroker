@@ -139,6 +139,15 @@ class ZMQProcess_Server extends ZMQProcess {
             case PINGREQ:
                 msg.send(sockets.get(FRONTEND_INDEX));
                 break;
+            case PLAN_CREATOR_MESSAGE:
+                Payload payload = PayloadKt.transformZMsg(msg, kryo);
+                if (payload != null) {
+                    if (payload instanceof Payload.ReqTopicSubscriptionsPayload) {
+
+                    }
+                }
+                break;
+
             default:
                 logger.error("Cannot process message for socket at index {}, as this index is not known.", msgType);
         }

@@ -98,6 +98,26 @@ class ClientDirectory {
     }
 
     /**
+     * Gets a list of Subscriptions by a topic.
+     *
+     * @param topicValue for which a list of Subscriptions is returned
+     * @return list of Subscriptions
+     */
+    fun getTopicSubscriptions(topicValue: String): List<Subscription> {
+        val topic = Topic(topicValue)
+        val subscriptions = mutableListOf<Subscription>()
+
+        for ((k, v) in clients) {
+            val s = v.getSubscription(topic)
+            if (s != null) {
+                subscriptions.add(s)
+            }
+        }
+
+        return subscriptions
+    }
+
+    /**
      * Checks whether a [Client] is subscribed to the given [Topic]. If so, it calculates the [Geofence]
      * difference (old geofence - given geofence) and returns it together with the subscription identifier of the
      * existing [Subscription]. If not subscribed yet, return null

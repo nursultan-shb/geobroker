@@ -1,7 +1,7 @@
 package de.hasenburg.geobroker.server.communication;
 
 import de.hasenburg.geobroker.commons.model.message.Topic;
-import de.hasenburg.geobroker.commons.model.message.TopicMetrics;
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.TopicMetrics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

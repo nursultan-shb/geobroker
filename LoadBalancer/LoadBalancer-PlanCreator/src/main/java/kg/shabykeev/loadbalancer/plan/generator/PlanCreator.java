@@ -1,6 +1,6 @@
 package kg.shabykeev.loadbalancer.plan.generator;
 
-import de.hasenburg.geobroker.commons.model.message.*;
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.*;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
 import kg.shabykeev.loadbalancer.plan.util.MessageParser;
 import org.apache.logging.log4j.LogManager;
@@ -35,7 +35,7 @@ public class PlanCreator {
      */
     private HashMap<String, String> topicServerMap = new HashMap<>();
 
-    private List<Task> tasks = new ArrayList<>();
+    private List<Task> tasks = new LinkedList<>();
 
     /**
      * Creates a plan based on incoming metrics
@@ -116,7 +116,7 @@ public class PlanCreator {
             if (slm.getLoad() >= SERVER_LOAD_THRESHOLD) {
                 TopicMetrics tm = getMostLoadedTopic(slm.getServer());
                 if (tm != null) {
-                    tasks.add(new Task(tm.getTopic(), slm.getLocalLoadAnalyzer(), leastLm.getServer(), TaskType.MIGRATE, false));
+                    createMigrationTasks(tm.getTopic(), slm.getLocalLoadAnalyzer(), leastLm.getServer());
                     tm.setServer(leastLm.getServer());
                     tm.setMessagesCount(0);
                 }
@@ -152,7 +152,7 @@ public class PlanCreator {
 
     private List<Plan> convertToPlanList(Map<String, String> planMap) {
         List<Plan> plan = new ArrayList<>();
-        planMap.forEach((k,v) -> plan.add(new Plan(k, v)));
+        planMap.forEach((k, v) -> plan.add(new Plan(k, v)));
         return plan;
     }
 
@@ -162,5 +162,12 @@ public class PlanCreator {
         topicSubMessages.clear();
         serverLoadMetrics.clear();
         tasks.clear();
+    }
+
+    private void createMigrationTasks(String topic, String serverSource, String serverDestination) {
+        String uuid = UUID.randomUUID().toString();
+        tasks.add(new Task(1, topic, serverSource, uuid, TaskType.REQ_SUBSCRIBERS, TaskStatus.CREATED));
+        tasks.add(new Task(2, topic, serverDestination, uuid, TaskType.INJECT_SUBSCRIBERS, TaskStatus.CREATED));
+        tasks.add(new Task(3, topic, serverSource, uuid, TaskType.UNSUBSCRIBE, TaskStatus.CREATED));
     }
 }

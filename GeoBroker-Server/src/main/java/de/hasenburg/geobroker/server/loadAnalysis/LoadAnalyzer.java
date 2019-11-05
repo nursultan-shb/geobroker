@@ -42,6 +42,7 @@ public class LoadAnalyzer {
 
     public void handleDealerMessage(){
         ZMsg msg = ZMsg.recvMsg(dealer);
+        msg.addLast(ZMsgType.PLAN_CREATOR_MESSAGE.toString());
         msg.send(pipe);
     }
 

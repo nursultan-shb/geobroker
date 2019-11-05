@@ -5,15 +5,14 @@ package de.hasenburg.geobroker.server.communication
 import de.hasenburg.geobroker.commons.communication.ZMQControlUtility
 import de.hasenburg.geobroker.commons.communication.ZMQProcess
 import de.hasenburg.geobroker.commons.model.KryoSerializer
-import de.hasenburg.geobroker.server.matching.IMatchingLogic
 import de.hasenburg.geobroker.commons.model.message.Payload
 import de.hasenburg.geobroker.commons.model.message.transformZMsgWithId
+import de.hasenburg.geobroker.server.matching.IMatchingLogic
 import org.apache.logging.log4j.LogManager
 import org.zeromq.SocketType
 import org.zeromq.ZContext
 import org.zeromq.ZMQ.Socket
 import org.zeromq.ZMsg
-
 import kotlin.system.exitProcess
 
 private val logger = LogManager.getLogger()
@@ -144,7 +143,10 @@ class ZMQProcess_MessageProcessor(private val brokerId: String, private val numb
                         clientsSocket,
                         brokersSocket,
                         kryo)
-                is Payload.TopicMigratePayload -> ma
+                is Payload.ReqTopicSubscriptionsPayload -> matchingLogic.processReqTopicSubscriptions(message.first,
+                        message.second as Payload.ReqTopicSubscriptionsPayload,
+                        clientsSocket,
+                        kryo)
                 is Payload.CONNACKPayload -> logger.warn("CONNACK messages are ignored by server")
                 is Payload.PINGRESPPayload -> logger.warn("PINGRESP messages are ignored by server")
                 is Payload.SUBACKPayload -> logger.warn("SUBACK messages are ignored by server")

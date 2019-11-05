@@ -1,4 +1,4 @@
-package de.hasenburg.geobroker.commons.model.message;
+package de.hasenburg.geobroker.commons.model.message.loadbalancer;
 
 public class Plan {
     public Plan(String topic, String server){

@@ -3,7 +3,7 @@ package kg.shabykeev.loadbalancer.plan.util;
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
-import de.hasenburg.geobroker.commons.model.message.TopicMetrics;
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.TopicMetrics;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kg.shabykeev.loadbalancer.plan.generator.Metrics;
