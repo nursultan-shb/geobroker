@@ -5,7 +5,9 @@ import de.hasenburg.geobroker.commons.model.message.Payload.*
 import de.hasenburg.geobroker.commons.model.message.ReasonCode
 import de.hasenburg.geobroker.commons.model.message.payloadToZMsg
 import de.hasenburg.geobroker.commons.model.spatial.Geofence
-import de.hasenburg.geobroker.server.matching.*
+import de.hasenburg.geobroker.server.matching.IMatchingLogic
+import de.hasenburg.geobroker.server.matching.connectClientAtLocalBroker
+import de.hasenburg.geobroker.server.matching.updateClientLocationAtLocalBroker
 import de.hasenburg.geobroker.server.storage.client.ClientDirectory
 import de.hasenburg.geobroker.server.storage.other.nogeo.NoGeoSubscriptionIndexingStructure
 import org.apache.commons.lang3.tuple.ImmutablePair
@@ -193,6 +195,11 @@ class SingleNoGeoMatchingLogic(private val clientDirectory: ClientDirectory,
     override fun processBrokerForwardPublish(otherBrokerId: String, payload: BrokerForwardPublishPayload,
                                              clients: Socket, brokers: Socket,
                                              kryo: KryoSerializer) {
+        logger.warn("Unsupported operation, message is discarded")
+    }
+
+    override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqTopicSubscriptionsPayload,
+                                              clients: Socket, kryo: KryoSerializer) {
         logger.warn("Unsupported operation, message is discarded")
     }
 

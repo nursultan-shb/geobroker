@@ -12,7 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Test;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
@@ -169,6 +168,14 @@ public class MessageProcessorToBrokerCommunicatorTest {
 												@NotNull BrokerForwardPublishPayload payload,
 												@NotNull ZMQ.Socket clients, @NotNull ZMQ.Socket brokers,
 												@NotNull KryoSerializer kryo) {
+			logger.warn("Unsupported operation, message is discarded");
+		}
+
+		@Override
+		public void processReqTopicSubscriptions(@NotNull String planCreatorId,
+												 @NotNull ReqTopicSubscriptionsPayload payload,
+												 @NotNull Socket clients,
+												 @NotNull KryoSerializer kryo) {
 			logger.warn("Unsupported operation, message is discarded");
 		}
 	}

@@ -181,6 +181,11 @@ class DisGBAtSubscriberMatchingLogic(private val clientDirectory: ClientDirector
         logger.warn("Unsupported operation, message is discarded")
     }
 
+    override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqTopicSubscriptionsPayload,
+                                              clients: Socket, kryo: KryoSerializer) {
+        logger.warn("Unsupported operation, message is discarded")
+    }
+
     /**
      * Publishes a message to local clients that originates from a client connected to another broker.
      *

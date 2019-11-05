@@ -457,6 +457,11 @@ class DisGBAtPublisherMatchingLogic constructor(private val clientDirectory: Cli
         sendResponse(response, clients)
     }
 
+    override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqTopicSubscriptionsPayload,
+                                              clients: Socket, kryo: KryoSerializer) {
+        logger.warn("Unsupported operation, message is discarded")
+    }
+
     /*****************************************************************
      * Message Processing Helper
      ****************************************************************/
