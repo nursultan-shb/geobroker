@@ -1,9 +1,7 @@
-package de.hasenburg.geobroker.server.storage.client
+package de.hasenburg.geobroker.commons.model.message
 
-import de.hasenburg.geobroker.commons.model.message.Topic
 import de.hasenburg.geobroker.commons.model.spatial.Geofence
 import org.apache.commons.lang3.tuple.ImmutablePair
-
 
 class Subscription(val subscriptionId: ImmutablePair<String, Int>, val topic: Topic, var geofence: Geofence) {
 

@@ -1,5 +1,6 @@
 package de.hasenburg.geobroker.server.storage.client
 
+import de.hasenburg.geobroker.commons.model.message.Subscription
 import de.hasenburg.geobroker.commons.model.message.Topic
 import de.hasenburg.geobroker.commons.model.spatial.Geofence
 import de.hasenburg.geobroker.commons.model.spatial.Location

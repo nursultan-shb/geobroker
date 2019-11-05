@@ -31,7 +31,7 @@ sealed class Payload {
 
     //LoadBalancer
     data class ReqTopicSubscriptionsPayload(val topic: String) : Payload()
-    data class ReqTopicSubscriptionsAckPayload(val topic: String, val subscriptions: List<String>) : Payload()
+    data class ReqTopicSubscriptionsAckPayload(val topic: String, val reasonCode: ReasonCode, val subscriptions: List<Subscription> = emptyList()) : Payload()
     data class MetricsAnalyzePayload(val metrics: List<String> = emptyList()) : Payload()
     data class PlanPayload(val plan: List<Plan> = emptyList()) : Payload()
     data class MetricsPayload(val brokerId: String, val cpuLoad: Double, val publishedMessages: List<TopicMetrics> = emptyList()) : Payload()
