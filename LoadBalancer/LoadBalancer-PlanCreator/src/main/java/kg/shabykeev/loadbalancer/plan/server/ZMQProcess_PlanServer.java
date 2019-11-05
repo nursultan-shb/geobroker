@@ -119,7 +119,7 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
                     msg.push(lbId);
                     msg.send(frontend);
                 }
-            } else if (payload instanceof Payload.TopicMigratePayload) {
+            } else if (payload instanceof Payload.ReqTopicSubscriptionsPayload) {
                 String brokerLocalLoadAnalyzerId = pair.getFirst();
                 ZMsg migrateMsg = PayloadKt.payloadToZMsg(payload, kryo, brokerLocalLoadAnalyzerId);
                 migrateMsg.send(backend);

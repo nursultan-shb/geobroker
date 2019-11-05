@@ -124,6 +124,18 @@ class KryoSerializer {
                 return Subscription(ImmutablePair(left, right), topic, geofence)
             }
         })
+        kryo.register(ClientSubscriptionReasonCode::class.java, object : Serializer<ClientSubscriptionReasonCode>() {
+            override fun write(kryo: Kryo, output: Output, o: ClientSubscriptionReasonCode) {
+                kryo.writeObjectOrNull(output, o.clientId, Topic::class.java)
+                kryo.writeObjectOrNull(output, o.reasonCode, Geofence::class.java)
+            }
+
+            override fun read(kryo: Kryo, input: Input, aClass: Class<out ClientSubscriptionReasonCode>): ClientSubscriptionReasonCode? {
+                val clientId = kryo.readObjectOrNull(input, String::class.java) ?: return null
+                val reasonCode = kryo.readObjectOrNull(input, ReasonCode::class.java) ?: return null
+                return ClientSubscriptionReasonCode(clientId, reasonCode)
+            }
+        })
         kryo.register(TopicMetrics::class.java, object : Serializer<TopicMetrics>() {
             override fun write(kryo: Kryo, output: Output, o: TopicMetrics) {
                 kryo.writeObjectOrNull(output, o.server, String::class.java)
@@ -438,6 +450,44 @@ class KryoSerializer {
                 }
 
                 return ReqTopicSubscriptionsAckPayload(topic, reasonCode, subscriptions)
+            }
+        })
+        kryo.register(TopicSubscriptionsPayload::class.java, object : Serializer<TopicSubscriptionsPayload>() {
+            override fun write(kryo: Kryo, output: Output, o: TopicSubscriptionsPayload) {
+                for (s in o.subscriptions) {
+                    kryo.writeObjectOrNull(output, s, String::class.java)
+                }
+            }
+
+            override fun read(kryo: Kryo, input: Input, aClass: Class<out TopicSubscriptionsPayload>): TopicSubscriptionsPayload? {
+                val subscriptions = mutableListOf<Subscription>()
+                while (!input.end()) {
+                    val sci = kryo.readObjectOrNull(input, Subscription::class.java)
+                    if (sci != null) {
+                        subscriptions.add(sci)
+                    }
+                }
+
+                return TopicSubscriptionsPayload(subscriptions)
+            }
+        })
+        kryo.register(TopicSubscriptionsAckPayload::class.java, object : Serializer<TopicSubscriptionsAckPayload>() {
+            override fun write(kryo: Kryo, output: Output, o: TopicSubscriptionsAckPayload) {
+                for (s in o.clientSubscriptionReasonCodes) {
+                    kryo.writeObjectOrNull(output, s, String::class.java)
+                }
+            }
+
+            override fun read(kryo: Kryo, input: Input, aClass: Class<out TopicSubscriptionsAckPayload>): TopicSubscriptionsAckPayload? {
+                val clientSubscriptionReasonCodes = mutableListOf<ClientSubscriptionReasonCode>()
+                while (!input.end()) {
+                    val sci = kryo.readObjectOrNull(input, ClientSubscriptionReasonCode::class.java)
+                    if (sci != null) {
+                        clientSubscriptionReasonCodes.add(sci)
+                    }
+                }
+
+                return TopicSubscriptionsAckPayload(clientSubscriptionReasonCodes)
             }
         })
         kryo.register(MetricsAnalyzePayload::class.java, object : Serializer<MetricsAnalyzePayload>() {

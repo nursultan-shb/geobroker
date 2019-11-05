@@ -3,6 +3,7 @@ package de.hasenburg.geobroker.server.matching
 import de.hasenburg.geobroker.commons.model.KryoSerializer
 import de.hasenburg.geobroker.commons.model.message.Payload.*
 import de.hasenburg.geobroker.commons.model.message.ReasonCode
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.ClientSubscriptionReasonCode
 import de.hasenburg.geobroker.commons.model.message.payloadToZMsg
 import de.hasenburg.geobroker.server.communication.ResourceMetrics
 import de.hasenburg.geobroker.server.storage.TopicAndGeofenceMapper
@@ -156,5 +157,26 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
         sendResponse(response, clients)
 
         logger.debug("Requested topic subscriptions: topic {}, size of subscriptions {}", payload.topic, subscriptions.size)
+    }
+
+    override fun processTopicSubscriptions(planCreatorId: String, payload: TopicSubscriptionsPayload,
+                                              clients: Socket, brokers: Socket, kryo: KryoSerializer) {
+
+        val clientSubscriptionReasonCodes = mutableListOf<ClientSubscriptionReasonCode>()
+        for (s in payload.subscriptions) {
+            val reasonCode = subscribeAtLocalBroker(s.getClientId(),
+                    clientDirectory,
+                    topicAndGeofenceMapper,
+                    s.topic,
+                    s.geofence,
+                    logger)
+
+            clientSubscriptionReasonCodes.add(ClientSubscriptionReasonCode(s.getClientId(), reasonCode))
+        }
+
+        val response = payloadToZMsg(TopicSubscriptionsAckPayload(clientSubscriptionReasonCodes), kryo, planCreatorId)
+        sendResponse(response, clients)
+
+        logger.debug(" Received injection of subscriptions. Size {}", payload.subscriptions.size)
     }
 }

@@ -57,6 +57,8 @@ interface IMatchingLogic {
     fun processReqTopicSubscriptions(planCreatorId: String, payload: Payload.ReqTopicSubscriptionsPayload,
                                      clients: Socket, kryo: KryoSerializer)
 
+    fun processTopicSubscriptions(planCreatorId: String, payload: Payload.TopicSubscriptionsPayload,
+                                     clients: Socket, brokers: Socket, kryo: KryoSerializer)
 }
 
 /*****************************************************************

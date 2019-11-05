@@ -2,6 +2,7 @@ package de.hasenburg.geobroker.commons.model.message
 
 import de.hasenburg.geobroker.commons.model.BrokerInfo
 import de.hasenburg.geobroker.commons.model.KryoSerializer
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.ClientSubscriptionReasonCode
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.Plan
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.PlanResult
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.TopicMetrics
@@ -32,6 +33,8 @@ sealed class Payload {
     //LoadBalancer
     data class ReqTopicSubscriptionsPayload(val topic: String) : Payload()
     data class ReqTopicSubscriptionsAckPayload(val topic: String, val reasonCode: ReasonCode, val subscriptions: List<Subscription> = emptyList()) : Payload()
+    data class TopicSubscriptionsPayload(val subscriptions: List<Subscription> = emptyList()) : Payload()
+    data class TopicSubscriptionsAckPayload(val clientSubscriptionReasonCodes: List<ClientSubscriptionReasonCode> = emptyList()) : Payload()
     data class MetricsAnalyzePayload(val metrics: List<String> = emptyList()) : Payload()
     data class PlanPayload(val plan: List<Plan> = emptyList()) : Payload()
     data class MetricsPayload(val brokerId: String, val cpuLoad: Double, val publishedMessages: List<TopicMetrics> = emptyList()) : Payload()
@@ -79,13 +82,14 @@ private enum class CPT {
     BrokerForwardPublish, //
 
     //LoadBalancer
-    TopicMigrate,
-    TopicMigrateAck,
+    ReqTopicSubscriptions,
+    ReqTopicSubscriptionsAck,
+    TopicSubscriptionsPayload,
+    TopicSubscriptionsAckPayload,
     MetricsAnalyze,
     Plan,
     Metrics,
     PlanResult
-
 }
 
 /**
@@ -112,8 +116,10 @@ fun payloadToZMsg(payload: Payload, kryo: KryoSerializer, identifier: String? = 
         is Payload.BrokerForwardPublishPayload -> CPT.BrokerForwardPublish
         is Payload.BrokerForwardSubscribePayload -> CPT.BrokerForwardSubscribe
         is Payload.BrokerForwardUnsubscribePayload -> CPT.BrokerForwardUnsubscribe
-        is Payload.ReqTopicSubscriptionsPayload -> CPT.TopicMigrate
-        is Payload.ReqTopicSubscriptionsAckPayload -> CPT.TopicMigrateAck
+        is Payload.ReqTopicSubscriptionsPayload -> CPT.ReqTopicSubscriptions
+        is Payload.ReqTopicSubscriptionsAckPayload -> CPT.ReqTopicSubscriptionsAck
+        is Payload.TopicSubscriptionsPayload -> CPT.TopicSubscriptionsPayload
+        is Payload.TopicSubscriptionsAckPayload -> CPT.TopicSubscriptionsAckPayload
         is Payload.MetricsAnalyzePayload -> CPT.MetricsAnalyze
         is Payload.PlanPayload -> CPT.Plan
         is Payload.MetricsPayload -> CPT.Metrics
@@ -197,8 +203,10 @@ private fun KryoSerializer.read(arr: ByteArray, controlPacketType: CPT): Payload
         CPT.BrokerForwardUnsubscribe -> this.read(arr,
                 Payload.BrokerForwardUnsubscribePayload::class.java)
         CPT.BrokerForwardPublish -> this.read(arr, Payload.BrokerForwardPublishPayload::class.java)
-        CPT.TopicMigrate -> this.read(arr, Payload.ReqTopicSubscriptionsPayload::class.java)
-        CPT.TopicMigrateAck -> this.read(arr, Payload.ReqTopicSubscriptionsAckPayload::class.java)
+        CPT.ReqTopicSubscriptions -> this.read(arr, Payload.ReqTopicSubscriptionsPayload::class.java)
+        CPT.ReqTopicSubscriptionsAck -> this.read(arr, Payload.ReqTopicSubscriptionsAckPayload::class.java)
+        CPT.TopicSubscriptionsPayload -> this.read(arr, Payload.TopicSubscriptionsPayload::class.java)
+        CPT.TopicSubscriptionsAckPayload -> this.read(arr, Payload.TopicSubscriptionsAckPayload::class.java)
         CPT.MetricsAnalyze -> this.read(arr, Payload.MetricsAnalyzePayload::class.java)
         CPT.Plan -> this.read(arr, Payload.PlanPayload::class.java)
         CPT.Metrics -> this.read(arr, Payload.MetricsPayload::class.java)

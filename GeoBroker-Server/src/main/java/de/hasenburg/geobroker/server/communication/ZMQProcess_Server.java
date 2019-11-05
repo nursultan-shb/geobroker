@@ -144,6 +144,8 @@ class ZMQProcess_Server extends ZMQProcess {
                 if (payload != null) {
                     if (payload instanceof Payload.ReqTopicSubscriptionsPayload) {
 
+                    } else if (payload instanceof  Payload.TopicSubscriptionsPayload) {
+
                     }
                 }
                 break;

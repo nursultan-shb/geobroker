@@ -25,7 +25,7 @@ public class PlanResult {
         return tasks;
     }
 
-    public void setTasks(LinkedList<Task> tasks) {
+    public void setTasks(List<Task> tasks) {
         this.tasks.clear();
         this.tasks.addAll(tasks);
     }
