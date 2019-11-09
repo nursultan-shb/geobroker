@@ -2,12 +2,21 @@ package de.hasenburg.geobroker.commons.model.message.loadbalancer;
 
 public class Task {
 
+    private String taskId;
     private Integer orderId;
     private String topic;
     private String server;
     private String groupId;
     private TaskType taskType;
     private TaskStatus taskStatus;
+
+    public String getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
 
     public Integer getOrderId() {
         return orderId;
@@ -57,7 +66,8 @@ public class Task {
         this.taskStatus = taskStatus;
     }
 
-    public Task(Integer orderId, String topic, String server, String groupId, TaskType taskType, TaskStatus taskStatus) {
+    public Task(String taskId, Integer orderId, String topic, String server, String groupId, TaskType taskType, TaskStatus taskStatus) {
+        this.taskId = taskId;
         this.orderId = orderId;
         this.topic = topic;
         this.server = server;

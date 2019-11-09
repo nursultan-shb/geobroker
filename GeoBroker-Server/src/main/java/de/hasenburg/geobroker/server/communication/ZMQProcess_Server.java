@@ -105,33 +105,39 @@ class ZMQProcess_Server extends ZMQProcess {
         }
     }
 
-    private void handleBackendMessage(ZMsg msg) {
-        msg.push(frontendAddress);
-        if (!msg.send(sockets.get(FRONTEND_INDEX))) {
-            logger.warn("Dropping response to client as HWM reached.");
+    private void handleBackendMessage(ZMsg backendMsg) {
+        ZMsg msg = backendMsg.duplicate();
+        Payload payload = PayloadKt.transformZMsg(backendMsg, kryo);
+        if (payload instanceof Payload.ReqTopicSubscriptionsAckPayload || payload instanceof Payload.TopicSubscriptionsAckPayload) {
+            msg.send(sockets.get(PIPE_INDEX));
         }
-
+        else {
+            msg.push(frontendAddress);
+            if (!msg.send(sockets.get(FRONTEND_INDEX))) {
+                logger.warn("Dropping response to client as HWM reached.");
+            }
+        }
     }
 
     private void handleFrontendMessage(ZMsg msg) {
-        if (msg.size() == 2) { //PINGRESP
+        String loadBalancer = msg.popString();
+        if (msg.getFirst().toString().equals(ZMsgType.PINGRESP.toString())) {
             msg.destroy();
             return;
         }
 
-        String lb = msg.popString();
         if (!msg.send(sockets.get(BACKEND_INDEX))) {
             logger.warn("Dropping client request as HWM reached.");
         }
     }
 
     private void handlePipeMessage(ZMsg msg) {
-        ZMsgType msgType = ZMsgType.valueOf(msg.getLast().toString());
+        ZMsgType msgType = ZMsgType.valueOf(msg.popString());
 
         switch (msgType) {
             case TOPIC_METRICS:
-                String localLoadAnalyzerId = msg.getFirst().toString();
-                ZMsg metricsMsg = getLoadMetrics(localLoadAnalyzerId);
+                ZMsg metricsMsg = getLoadMetrics();
+                msg.destroy();
                 if (!metricsMsg.send(sockets.get(PIPE_INDEX))) {
                     logger.warn("Dropping client request as HWM reached.");
                 }
@@ -140,13 +146,8 @@ class ZMQProcess_Server extends ZMQProcess {
                 msg.send(sockets.get(FRONTEND_INDEX));
                 break;
             case PLAN_CREATOR_MESSAGE:
-                Payload payload = PayloadKt.transformZMsg(msg, kryo);
-                if (payload != null) {
-                    if (payload instanceof Payload.ReqTopicSubscriptionsPayload) {
-
-                    } else if (payload instanceof  Payload.TopicSubscriptionsPayload) {
-
-                    }
+                if (!msg.send(sockets.get(BACKEND_INDEX))) {
+                    logger.warn("Dropping client request as HWM reached.");
                 }
                 break;
 
@@ -166,9 +167,9 @@ class ZMQProcess_Server extends ZMQProcess {
         logger.info("Shut down ZMQProcess_Server {}", getServerIdentity(identity));
     }
 
-    private ZMsg getLoadMetrics(String localLoadAnalyzerId) {
+    private ZMsg getLoadMetrics() {
         Payload.MetricsPayload payload = new Payload.MetricsPayload(this.brokerIdentity, 80, ResourceMetrics.getPublishedMessages(this.brokerIdentity));
-        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, localLoadAnalyzerId);
+        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);
         ResourceMetrics.clear();
 
         return msg;

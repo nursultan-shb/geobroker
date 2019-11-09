@@ -1,9 +1,13 @@
 package kg.shabykeev.loadbalancer.plan.messageProcessor;
 
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
-import de.hasenburg.geobroker.commons.model.message.*;
+import de.hasenburg.geobroker.commons.model.message.Payload;
+import de.hasenburg.geobroker.commons.model.message.PayloadKt;
+import de.hasenburg.geobroker.commons.model.message.Subscription;
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.Plan;
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.PlanResult;
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.Task;
+import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +24,8 @@ public class MessageProcessor {
     private LinkedList<ZMsg> msgQueue = new LinkedList<>();
     private Task currentTask;
     private PlanResult planResult;
+    private List<Plan> plan = new ArrayList<>();
+    private LinkedList<Task> tasks = new LinkedList<>();
     private boolean isMigrationOn = false;
 
     private ZContext ctx;
@@ -42,10 +48,10 @@ public class MessageProcessor {
             Payload payload = pair.getSecond();
             if (payload instanceof Payload.MetricsPayload && !isMigrationOn) {
                 msgQueue.add(msgCopy);
-                logger.info("added to queue" + msg);
+                logger.info("added to queue" + msgCopy);
             } else if (payload instanceof Payload.ReqTopicSubscriptionsAckPayload) {
                 //if (((Payload.ReqTopicSubscriptionsAckPayload) payload).getReasonCode() == ReasonCode.Success) {
-                    performTasks();
+                    performTasks(payload);
                 //}
             }
         }
@@ -63,16 +69,15 @@ public class MessageProcessor {
                     if (planResult.getTasks().size() > 0) {
                         isMigrationOn = true;
                         this.planResult = planResult;
-                        performTasks();
+                        this.tasks.addAll(planResult.getTasks());
+                        performTasks(null);
                     } else {
-                        releasePlan(planResult);
+                        releasePlan();
                         isMigrationOn = false;
                     }
                 }
             }
         }
-
-        msg.send(this.pipe);
     }
 
     public void sendMetrics() {
@@ -95,26 +100,33 @@ public class MessageProcessor {
         }
     }
 
-    private void releasePlan(PlanResult planResult) {
-        Payload.PlanPayload payload = new Payload.PlanPayload(planResult.getPlan());
+    private void releasePlan() {
+        Payload.PlanPayload payload = new Payload.PlanPayload(plan);
         ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, pairSocket.getLastEndpoint());
+        msg.push(ZMsgType.PLAN.toString());
 
         msg.send(pipe);
         logger.info("Plan " + planResult.getPlanNumber() + " has been released");
         this.planResult = null;
+        this.plan.clear();
     }
 
-    private void performTasks() {
-        currentTask = this.planResult.getTasks().poll();
+    private void performTasks(Payload payload) {
+        currentTask = this.tasks.poll();
 
         switch (currentTask.getTaskType()) {
             case REQ_SUBSCRIBERS:
-                Payload.ReqTopicSubscriptionsPayload payload = new Payload.ReqTopicSubscriptionsPayload(currentTask.getTopic());
-                ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, currentTask.getServer());
-                msg.send(pipe);
+                Payload.ReqTopicSubscriptionsPayload reqPayload = new Payload.ReqTopicSubscriptionsPayload(currentTask.getTaskId(), currentTask.getTopic());
+                ZMsg migMsg = PayloadKt.payloadToZMsg(reqPayload, kryo, currentTask.getServer());
+                migMsg.push(ZMsgType.MIGRATION_TASK.toString());
+                migMsg.send(pipe);
                 break;
             case INJECT_SUBSCRIBERS:
-
+                List<Subscription> subscriptions = ((Payload.ReqTopicSubscriptionsAckPayload) payload).getSubscriptions();
+                Payload.TopicSubscriptionsPayload subPayload = new Payload.TopicSubscriptionsPayload(subscriptions);
+                ZMsg injMsg = PayloadKt.payloadToZMsg(subPayload, kryo, currentTask.getServer());
+                injMsg.push(ZMsgType.MIGRATION_TASK.toString());
+                injMsg.send(pipe);
                 break;
             case UNSUBSCRIBE:
                 break;

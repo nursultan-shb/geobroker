@@ -5,9 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class PlanResult {
-    private LinkedList<Task> tasks = new LinkedList<>();
+    private List<Task> tasks = new LinkedList<>();
     private boolean isNewPlan = false;
     private int planNumber = 0;
+    private int tasksSize = 0;
     private List<Plan> plan = new ArrayList<>();
 
     public PlanResult () {
@@ -16,18 +17,20 @@ public class PlanResult {
 
     public PlanResult(List<Task> tasks, boolean isNewPlan, int planNumber, List<Plan> plan) {
         this.tasks = new LinkedList<>(tasks);
+        this.tasksSize = this.tasks.size();
         this.isNewPlan = isNewPlan;
         this.planNumber = planNumber;
-        this.plan = plan;
+        this.plan = new ArrayList<>(plan);
     }
 
-    public LinkedList<Task> getTasks() {
+    public List<Task> getTasks() {
         return tasks;
     }
 
     public void setTasks(List<Task> tasks) {
         this.tasks.clear();
         this.tasks.addAll(tasks);
+        this.tasksSize = this.tasks.size();
     }
 
     public boolean isNewPlan() {
@@ -51,7 +54,12 @@ public class PlanResult {
     }
 
     public void setPlan(List<Plan> plan) {
-        plan.clear();
-        plan.addAll(plan);
+        this.plan.clear();
+        this.plan.addAll(plan);
     }
+
+    public int getTasksSize() {
+        return tasksSize;
+    }
+
 }

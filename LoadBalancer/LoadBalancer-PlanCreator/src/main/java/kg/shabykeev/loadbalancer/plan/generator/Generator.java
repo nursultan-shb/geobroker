@@ -52,9 +52,11 @@ public class Generator extends Thread {
 
     private void processMetricsAnalyzePayload(Payload.MetricsAnalyzePayload payload) {
         PlanResult planResult = planCreator.createPlan(payload.getMetrics());
-        Payload.PlanResultPayload resultPayload = new Payload.PlanResultPayload(planResult);
-        ZMsg msg = PayloadKt.payloadToZMsg(resultPayload, kryo, null);
+        if (planResult.isNewPlan()) {
+            Payload.PlanResultPayload resultPayload = new Payload.PlanResultPayload(planResult);
+            ZMsg msg = PayloadKt.payloadToZMsg(resultPayload, kryo, null);
 
-        msg.send(pairSocket);
+            msg.send(pairSocket);
+        }
     }
 }

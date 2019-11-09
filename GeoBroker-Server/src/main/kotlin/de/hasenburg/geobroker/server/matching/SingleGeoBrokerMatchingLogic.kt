@@ -151,9 +151,9 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
      ****************************************************************/
 
     override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqTopicSubscriptionsPayload,
-                                              clients: Socket, kryo: KryoSerializer) {
+                                              clients: Socket, brokers: Socket, kryo: KryoSerializer) {
         val subscriptions = clientDirectory.getTopicSubscriptions(payload.topic)
-        val response = payloadToZMsg(ReqTopicSubscriptionsAckPayload(payload.topic, ReasonCode.Success, subscriptions), kryo, planCreatorId)
+        val response = payloadToZMsg(ReqTopicSubscriptionsAckPayload(payload.taskId, ReasonCode.Success, subscriptions), kryo)
         sendResponse(response, clients)
 
         logger.debug("Requested topic subscriptions: topic {}, size of subscriptions {}", payload.topic, subscriptions.size)

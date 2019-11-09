@@ -6,6 +6,7 @@ import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.commons.model.message.ReasonCode;
+import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kg.shabykeev.loadbalancer.plan.messageProcessor.MessageProcessorAgent;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -29,7 +30,7 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
     private ZContext context;
     private ZMQ.Socket frontend;
     private ZMQ.Socket backend;
-    private ZMQ.Socket metrics_pipe;
+    private ZMQ.Socket pipe;
     private ZFrame plan;
 
     // socket indices
@@ -85,14 +86,14 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
 
         MessageProcessorAgent queueAgent = new MessageProcessorAgent();
         Object[] args = new Object[0];
-        metrics_pipe = ZThread.fork(context, queueAgent, args);
-        socketArray[METRICS_PIPE_INDEX] = metrics_pipe;
+        pipe = ZThread.fork(context, queueAgent, args);
+        socketArray[METRICS_PIPE_INDEX] = pipe;
 
         return Arrays.asList(socketArray);
     }
 
     private void handleBackendMessages(ZMsg msg) {
-        msg.send(metrics_pipe);
+        msg.send(pipe);
     }
 
     private void handleFrontendMessages(ZMsg msg) {
@@ -111,6 +112,22 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
     }
 
     private void handlePipeMessage(ZMsg msg) {
+        ZMsgType msgType = ZMsgType.valueOf(msg.popString());
+        switch (msgType) {
+            case PLAN:
+                releasePlan(msg);
+                break;
+            case MIGRATION_TASK:
+                msg.send(backend);
+                break;
+            default:
+                logger.error("Cannot process message as the messageType is not known.", msgType);
+                break;
+        }
+
+    }
+
+    private void releasePlan(ZMsg msg) {
         Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(msg, kryo);
         if (pair != null) {
             Payload payload = pair.getSecond();
@@ -119,13 +136,10 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
                     msg.push(lbId);
                     msg.send(frontend);
                 }
-            } else if (payload instanceof Payload.ReqTopicSubscriptionsPayload) {
-                String brokerLocalLoadAnalyzerId = pair.getFirst();
-                ZMsg migrateMsg = PayloadKt.payloadToZMsg(payload, kryo, brokerLocalLoadAnalyzerId);
-                migrateMsg.send(backend);
             }
         }
     }
+
 
     @Override
     protected void utilizationCalculated(double utilization) {
@@ -146,5 +160,6 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
                                                          ZMsg msg) {
         // no other commands are of interest
     }
+
 
 }

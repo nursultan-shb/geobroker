@@ -6,6 +6,7 @@ import de.hasenburg.geobroker.commons.communication.ZMQProcess;
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
+import de.hasenburg.geobroker.commons.model.message.ReasonCode;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -123,19 +124,17 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     }
 
     private void handleBackendMessage(ZMsg msg) {
-        if (msg.size() == 2) {
-            String sender = msg.popString();
-            brokers.add(sender);
+        String brokerServer = msg.popString();
 
-            ZMsg reply = new ZMsg();
-            reply.add(sender);
-            reply.add(ZMsgType.PINGRESP.toString());
+        if (msg.getFirst().toString().equals(ZMsgType.PINGREQ.toString())) {
+            brokers.add(brokerServer);
+
+            ZMsg reply = PayloadKt.payloadToZMsg(new Payload.PINGRESPPayload(ReasonCode.Success), kryo, brokerServer);
             reply.send(sockets.get(BACKEND_INDEX));
             msg.destroy();
             return;
         }
 
-        String broker = msg.popString();
         if (!msg.send(sockets.get(FRONTEND_INDEX))) {
             logger.warn("Dropping response to client as HWM reached.");
         }

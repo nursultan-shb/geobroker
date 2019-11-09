@@ -17,19 +17,30 @@ fun main() {
     val client = SimpleClient("localhost", 7225, processManager)
 
     // connect
-    client.send(Payload.CONNECTPayload(Location.random()))
+    val location = Location.random();
+    client.send(Payload.CONNECTPayload(location))
 
     // receive one message
     logger.info("Received server answer: {}", client.receive())
 
     // publish
+
+    logger.info("-----------Sending RED")
     for (i in 1..100) {
-        client.send(Payload.PUBLISHPayload(Topic("red"), Geofence.circle(Location.random(), 2.0), i.toString()))
+        client.send(Payload.PUBLISHPayload(Topic("red"), Geofence.circle(location, 2.0), i.toString()))
+        logger.info("Received server answer: {}", client.receive())
+    }
+
+    // publish
+
+    logger.info("-----------Sending BLUE")
+    for (i in 1..50) {
+        client.send(Payload.PUBLISHPayload(Topic("blue"), Geofence.circle(location, 2.0), i.toString()))
         logger.info("Received server answer: {}", client.receive())
     }
 
     // wait 5 seconds
-    sleepNoLog(5000, 0)
+    sleepNoLog(300*1000, 0)
 
     // disconnect
     client.send(Payload.DISCONNECTPayload(ReasonCode.NormalDisconnection))

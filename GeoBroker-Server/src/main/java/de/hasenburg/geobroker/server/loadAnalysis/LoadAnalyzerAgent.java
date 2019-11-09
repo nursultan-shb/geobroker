@@ -15,8 +15,7 @@ public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
         String brokerAddress = args[1].toString();
         String loadBalancerAddress = args[2].toString();
 
-        LoadAnalyzer loadAnalyzer = new LoadAnalyzer(ctx, pipe, brokerAddress, loadBalancerAddress);
-        loadAnalyzer.dealer.connect(planCreatorAddress);
+        LoadAnalyzer loadAnalyzer = new LoadAnalyzer(ctx, pipe, brokerAddress, loadBalancerAddress, planCreatorAddress);
 
         ZMQ.Poller poller = ctx.createPoller(2);
         poller.register(loadAnalyzer.pipe, ZMQ.Poller.POLLIN);

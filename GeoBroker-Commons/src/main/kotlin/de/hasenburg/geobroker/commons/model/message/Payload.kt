@@ -31,8 +31,8 @@ sealed class Payload {
     data class BrokerForwardPingreqPayload(val clientIdentifier: String, val pingreqPayload: PINGREQPayload) : Payload()
 
     //LoadBalancer
-    data class ReqTopicSubscriptionsPayload(val topic: String) : Payload()
-    data class ReqTopicSubscriptionsAckPayload(val topic: String, val reasonCode: ReasonCode, val subscriptions: List<Subscription> = emptyList()) : Payload()
+    data class ReqTopicSubscriptionsPayload(val taskId: String, val topic: String) : Payload()
+    data class ReqTopicSubscriptionsAckPayload(val taskId: String, val reasonCode: ReasonCode, val subscriptions: List<Subscription> = emptyList()) : Payload()
     data class TopicSubscriptionsPayload(val subscriptions: List<Subscription> = emptyList()) : Payload()
     data class TopicSubscriptionsAckPayload(val clientSubscriptionReasonCodes: List<ClientSubscriptionReasonCode> = emptyList()) : Payload()
     data class MetricsAnalyzePayload(val metrics: List<String> = emptyList()) : Payload()

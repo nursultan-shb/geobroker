@@ -181,8 +181,19 @@ class DisGBAtSubscriberMatchingLogic(private val clientDirectory: ClientDirector
         logger.warn("Unsupported operation, message is discarded")
     }
 
+
+
+    /*****************************************************************
+     * Load Balancer Methods
+     ****************************************************************/
+
     override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqTopicSubscriptionsPayload,
-                                              clients: Socket, kryo: KryoSerializer) {
+                                              clients: Socket, brokers: Socket, kryo: KryoSerializer) {
+        logger.warn("Unsupported operation, message is discarded")
+    }
+
+    override fun processTopicSubscriptions(planCreatorId: String, payload: TopicSubscriptionsPayload,
+                                           clients: Socket, brokers: Socket, kryo: KryoSerializer) {
         logger.warn("Unsupported operation, message is discarded")
     }
 

@@ -164,6 +164,7 @@ class KryoSerializer {
         })
         kryo.register(Task::class.java, object : Serializer<Task>() {
             override fun write(kryo: Kryo, output: Output, o: Task) {
+                kryo.writeObjectOrNull(output, o.taskId, String::class.java)
                 kryo.writeObjectOrNull(output, o.orderId, Int::class.java)
                 kryo.writeObjectOrNull(output, o.topic, String::class.java)
                 kryo.writeObjectOrNull(output, o.server, String::class.java)
@@ -173,46 +174,61 @@ class KryoSerializer {
             }
 
             override fun read(kryo: Kryo, input: Input, aClass: Class<out Task>): Task? {
+                val taskId = kryo.readObjectOrNull(input, String::class.java) ?: return null
                 val orderId = kryo.readObjectOrNull(input, Int::class.java) ?: return null
                 val topic = kryo.readObjectOrNull(input, String::class.java) ?: return null
                 val server = kryo.readObjectOrNull(input, String::class.java) ?: return null
                 val groupId = kryo.readObjectOrNull(input, String::class.java) ?: return null
                 val taskType = kryo.readObjectOrNull(input, TaskType::class.java) ?: return null
                 val taskStatus = kryo.readObjectOrNull(input, TaskStatus::class.java) ?: return null
-                return Task(orderId, topic, server, groupId, taskType, taskStatus)
+                return Task(taskId, orderId, topic, server, groupId, taskType, taskStatus)
             }
         })
         kryo.register(PlanResult::class.java, object : Serializer<PlanResult>() {
             override fun write(kryo: Kryo, output: Output, o: PlanResult) {
+                kryo.writeObjectOrNull(output, o.isNewPlan, Boolean::class.java)
+                kryo.writeObjectOrNull(output, o.planNumber, Int::class.java)
+                kryo.writeObjectOrNull(output, o.tasksSize, Int::class.java)
+
                 for (task in o.tasks) {
                     kryo.writeObjectOrNull(output, task, Task::class.java)
                 }
-                kryo.writeObjectOrNull(output, o.isNewPlan, Boolean::class.java)
-                kryo.writeObjectOrNull(output, o.planNumber, Int::class.java)
+
                 for (p in o.plan) {
                     kryo.writeObjectOrNull(output, p, Plan::class.java)
                 }
             }
 
             override fun read(kryo: Kryo, input: Input, aClass: Class<out PlanResult>): PlanResult? {
-                val tasks = mutableListOf<Task>()
-                while (!input.end()) {
-                    val sci = kryo.readObjectOrNull(input, Task::class.java)
-                    if (sci != null) {
-                        tasks.add(sci)
-                    }
-                }
-
                 val isNewPlan = kryo.readObjectOrNull(input, Boolean::class.java) ?: return null
                 val planNumber = kryo.readObjectOrNull(input, Int::class.java) ?: return null
+                val tasksSize = kryo.readObjectOrNull(input, Int::class.java) ?: return null
+
+                val tasks = mutableListOf<Task>()
+                if (tasksSize > 0) {
+                    var i = 0
+                    while (!input.end()) {
+                        val sci = kryo.readObjectOrNull(input, Task::class.java)
+                        if (sci != null) {
+                            tasks.add(sci)
+                            i++;
+                        }
+
+                        //break the loop before it starts reading from the buffer
+                        if (i == tasksSize) {
+                            break;
+                        }
+                    }
+                }
 
                 val plan = mutableListOf<Plan>()
                 while (!input.end()) {
-                    val sci = kryo.readObjectOrNull(input, Plan::class.java)
-                    if (sci != null) {
-                        plan.add(sci)
+                    val p = kryo.readObjectOrNull(input, Plan::class.java)
+                    if (p != null) {
+                        plan.add(p)
                     }
                 }
+
                 return PlanResult(tasks, isNewPlan, planNumber, plan)
             }
         })
@@ -420,26 +436,28 @@ class KryoSerializer {
         })
         kryo.register(ReqTopicSubscriptionsPayload::class.java, object : Serializer<ReqTopicSubscriptionsPayload>() {
             override fun write(kryo: Kryo, output: Output, o: ReqTopicSubscriptionsPayload) {
+                kryo.writeObjectOrNull(output, o.taskId, String::class.java)
                 kryo.writeObjectOrNull(output, o.topic, String::class.java)
             }
 
             override fun read(kryo: Kryo, input: Input, aClass: Class<out ReqTopicSubscriptionsPayload>): ReqTopicSubscriptionsPayload? {
+                val taskId = kryo.readObjectOrNull(input, String::class.java) ?: return null
                 val topic = kryo.readObjectOrNull(input, String::class.java) ?: return null
 
-                return ReqTopicSubscriptionsPayload(topic)
+                return ReqTopicSubscriptionsPayload(taskId, topic)
             }
         })
         kryo.register(ReqTopicSubscriptionsAckPayload::class.java, object : Serializer<ReqTopicSubscriptionsAckPayload>() {
             override fun write(kryo: Kryo, output: Output, o: ReqTopicSubscriptionsAckPayload) {
-                kryo.writeObjectOrNull(output, o.topic, String::class.java)
+                kryo.writeObjectOrNull(output, o.taskId, String::class.java)
                 kryo.writeObjectOrNull(output, o.reasonCode, ReasonCode::class.java)
                 for (s in o.subscriptions) {
-                    kryo.writeObjectOrNull(output, s, String::class.java)
+                    kryo.writeObjectOrNull(output, s, Subscription::class.java)
                 }
             }
 
             override fun read(kryo: Kryo, input: Input, aClass: Class<out ReqTopicSubscriptionsAckPayload>): ReqTopicSubscriptionsAckPayload? {
-                val topic = kryo.readObjectOrNull(input, String::class.java) ?: return null
+                val taskId = kryo.readObjectOrNull(input, String::class.java) ?: return null
                 val reasonCode = kryo.readObjectOrNull(input, ReasonCode::class.java) ?: return null
                 val subscriptions = mutableListOf<Subscription>()
                 while (!input.end()) {
@@ -449,13 +467,13 @@ class KryoSerializer {
                     }
                 }
 
-                return ReqTopicSubscriptionsAckPayload(topic, reasonCode, subscriptions)
+                return ReqTopicSubscriptionsAckPayload(taskId, reasonCode, subscriptions)
             }
         })
         kryo.register(TopicSubscriptionsPayload::class.java, object : Serializer<TopicSubscriptionsPayload>() {
             override fun write(kryo: Kryo, output: Output, o: TopicSubscriptionsPayload) {
                 for (s in o.subscriptions) {
-                    kryo.writeObjectOrNull(output, s, String::class.java)
+                    kryo.writeObjectOrNull(output, s, Subscription::class.java)
                 }
             }
 
@@ -547,6 +565,17 @@ class KryoSerializer {
                     }
                 }
                 return MetricsPayload(brokerId, cpuLoad, publishedMessages)
+            }
+        })
+        kryo.register(PlanResultPayload::class.java, object : Serializer<PlanResultPayload>() {
+            override fun write(kryo: Kryo, output: Output, o: PlanResultPayload) {
+                kryo.writeObjectOrNull(output, o.planResult, PlanResult::class.java)
+            }
+
+            override fun read(kryo: Kryo, input: Input, aClass: Class<out PlanResultPayload>): PlanResultPayload? {
+                val planResult = kryo.readObjectOrNull(input, PlanResult::class.java) ?: return null
+
+                return PlanResultPayload(planResult)
             }
         })
 
