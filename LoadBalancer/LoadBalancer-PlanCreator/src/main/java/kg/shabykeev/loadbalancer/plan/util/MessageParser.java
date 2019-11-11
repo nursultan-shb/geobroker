@@ -5,7 +5,6 @@ import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.TopicMetrics;
 import kg.shabykeev.loadbalancer.commons.ServerLoadMetrics;
-import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kg.shabykeev.loadbalancer.plan.generator.Metrics;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -55,33 +54,6 @@ public class MessageParser {
         return new Metrics(aggregateServerLoadMetrics(lmList), aggregateTopicMetrics(topicPubMessagesList));
     }
 
-    public static Metrics parseMessage(String metrics) {
-
-        ArrayList<ServerLoadMetrics> lmList = new ArrayList<>();
-        ArrayList<TopicMetrics> topicPubMessagesList = new ArrayList<>();
-
-        metrics = deleteEdgeSymbols(metrics.trim());
-        String[] strValues = metrics.split("],");
-
-        for (String strValue : strValues) {
-            String value = replaceSpecialCharacters(strValue);
-            String[] elements = Arrays.stream(value.split(",")).map(String::trim).toArray(String[]::new);
-
-            if (value.contains(ZMsgType.TOPIC_METRICS.toString())) {
-                String server = elements[2];
-                ServerLoadMetrics slm = new ServerLoadMetrics(server, elements[0], Double.valueOf(elements[3]));
-                lmList.add(slm);
-
-                //parse topic metrics
-                if (elements.length > 4) {
-                    topicPubMessagesList.addAll(parseTopicMetrics(elements[4], server));
-                }
-            }
-        }
-
-        return new Metrics(aggregateServerLoadMetrics(lmList), aggregateTopicMetrics(topicPubMessagesList));
-    }
-
     private static ZMsg parseStringIntoMessage(String str){
         ZMsg msg = new ZMsg();
         str = replaceSpecialCharacters(str).trim();
@@ -103,28 +75,6 @@ public class MessageParser {
         return msg;
     }
 
-    private static ArrayList<TopicMetrics> parseTopicMetrics(String value, String server) {
-        ArrayList<TopicMetrics> tmList = new ArrayList<>();
-
-        if (value.trim().length() < 3) {
-            return tmList;
-        }
-
-        String[] keyValuePairs = value.split("\\|");
-
-        for (String pair : keyValuePairs) {
-            String[] entry = pair.split("=");
-            TopicMetrics tm = new TopicMetrics(server, entry[0].trim(), Integer.valueOf(entry[1].trim()));
-
-            tmList.add(tm);
-        }
-
-        return tmList;
-    }
-
-    private static String deleteEdgeSymbols(String str) {
-        return str.substring(1, str.length() - 1).trim();
-    }
 
     private static String replaceSpecialCharacters(String str) {
         return str.replace("[", "").replace("]", "");
