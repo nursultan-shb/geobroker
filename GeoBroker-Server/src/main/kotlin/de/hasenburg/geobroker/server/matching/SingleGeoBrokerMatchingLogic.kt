@@ -3,7 +3,7 @@ package de.hasenburg.geobroker.server.matching
 import de.hasenburg.geobroker.commons.model.KryoSerializer
 import de.hasenburg.geobroker.commons.model.message.Payload.*
 import de.hasenburg.geobroker.commons.model.message.ReasonCode
-import de.hasenburg.geobroker.commons.model.message.loadbalancer.ClientSubscriptionReasonCode
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.ClientReasonCode
 import de.hasenburg.geobroker.commons.model.message.payloadToZMsg
 import de.hasenburg.geobroker.server.communication.ResourceMetrics
 import de.hasenburg.geobroker.server.storage.TopicAndGeofenceMapper
@@ -150,19 +150,19 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
      * LoadBalancer Methods
      ****************************************************************/
 
-    override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqTopicSubscriptionsPayload,
+    override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqSubscriptionsPayload,
                                               clients: Socket, brokers: Socket, kryo: KryoSerializer) {
         val subscriptions = clientDirectory.getTopicSubscriptions(payload.topic)
-        val response = payloadToZMsg(ReqTopicSubscriptionsAckPayload(payload.taskId, ReasonCode.Success, subscriptions), kryo)
+        val response = payloadToZMsg(ReqSubscriptionsAckPayload(payload.taskId, ReasonCode.Success, subscriptions), kryo)
         sendResponse(response, clients)
 
-        logger.debug("Requested topic subscriptions: topic {}, size of subscriptions {}", payload.topic, subscriptions.size)
+        logger.debug("MIGRATION: Requested topic subscriptions: topic {}, size of subscriptions {}", payload.topic, subscriptions.size)
     }
 
-    override fun processTopicSubscriptions(planCreatorId: String, payload: TopicSubscriptionsPayload,
-                                              clients: Socket, brokers: Socket, kryo: KryoSerializer) {
+    override fun processTopicSubscriptions(planCreatorId: String, payload: InjectSubscriptionsPayload,
+                                           clients: Socket, brokers: Socket, kryo: KryoSerializer) {
 
-        val clientSubscriptionReasonCodes = mutableListOf<ClientSubscriptionReasonCode>()
+        val clientReasonCodes = mutableListOf<ClientReasonCode>()
         for (s in payload.subscriptions) {
             val reasonCode = subscribeAtLocalBroker(s.getClientId(),
                     clientDirectory,
@@ -171,12 +171,32 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
                     s.geofence,
                     logger)
 
-            clientSubscriptionReasonCodes.add(ClientSubscriptionReasonCode(s.getClientId(), reasonCode))
+            clientReasonCodes.add(ClientReasonCode(s.getClientId(), reasonCode))
         }
 
-        val response = payloadToZMsg(TopicSubscriptionsAckPayload(clientSubscriptionReasonCodes), kryo, planCreatorId)
+        val response = payloadToZMsg(InjectSubscriptionsAckPayload(payload.taskId, clientReasonCodes), kryo, planCreatorId)
         sendResponse(response, clients)
 
-        logger.debug(" Received injection of subscriptions. Size {}", payload.subscriptions.size)
+        logger.debug("MIGRATION: Received injection of subscriptions. Size {}", payload.subscriptions.size)
+    }
+
+    override fun processUnsubscribeTopic(planCreatorId: String, payload: UnsubscribeTopicPayload,
+                                              clients: Socket, brokers: Socket, kryo: KryoSerializer) {
+
+        val clientReasonCodes = mutableListOf<ClientReasonCode>()
+        val subscriptions = clientDirectory.getTopicSubscriptions(payload.topic)
+        for (subscription in subscriptions) {
+            val reasonCode = unsubscribeAtLocalBroker(subscription.getClientId(),
+                    clientDirectory,
+                    topicAndGeofenceMapper,
+                    subscription.topic,
+                    logger)
+            clientReasonCodes.add(ClientReasonCode(subscription.getClientId(), reasonCode))
+        }
+
+        val response = payloadToZMsg(UnsubscribeTopicAckPayload(payload.taskId, clientReasonCodes), kryo)
+        sendResponse(response, clients)
+
+        logger.debug("MIGRATION: Requested topic unsubscription: topic {}", payload.topic)
     }
 }

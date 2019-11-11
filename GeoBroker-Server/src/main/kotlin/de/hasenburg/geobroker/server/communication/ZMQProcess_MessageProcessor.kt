@@ -143,9 +143,20 @@ class ZMQProcess_MessageProcessor(private val brokerId: String, private val numb
                         clientsSocket,
                         brokersSocket,
                         kryo)
-                is Payload.ReqTopicSubscriptionsPayload -> matchingLogic.processReqTopicSubscriptions(message.first,
-                        message.second as Payload.ReqTopicSubscriptionsPayload,
+                is Payload.ReqSubscriptionsPayload -> matchingLogic.processReqTopicSubscriptions(message.first,
+                        message.second as Payload.ReqSubscriptionsPayload,
                         clientsSocket,
+                        brokersSocket,
+                        kryo)
+                is Payload.InjectSubscriptionsPayload -> matchingLogic.processTopicSubscriptions(message.first,
+                        message.second as Payload.InjectSubscriptionsPayload,
+                        clientsSocket,
+                        brokersSocket,
+                        kryo)
+                is Payload.UnsubscribeTopicPayload -> matchingLogic.processUnsubscribeTopic(message.first,
+                        message.second as Payload.UnsubscribeTopicPayload,
+                        clientsSocket,
+                        brokersSocket,
                         kryo)
                 is Payload.CONNACKPayload -> logger.warn("CONNACK messages are ignored by server")
                 is Payload.PINGRESPPayload -> logger.warn("PINGRESP messages are ignored by server")

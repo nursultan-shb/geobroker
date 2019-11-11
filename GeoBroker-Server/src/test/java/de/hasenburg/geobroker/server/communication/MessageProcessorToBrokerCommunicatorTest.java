@@ -173,7 +173,7 @@ public class MessageProcessorToBrokerCommunicatorTest {
 
 		@Override
 		public void processReqTopicSubscriptions(@NotNull String planCreatorId,
-												 @NotNull ReqTopicSubscriptionsPayload payload,
+												 @NotNull ReqSubscriptionsPayload payload,
 												 @NotNull Socket clients,
 												 @NotNull ZMQ.Socket brokers,
 												 @NotNull KryoSerializer kryo) {
@@ -182,8 +182,16 @@ public class MessageProcessorToBrokerCommunicatorTest {
 
 		@Override
 		public void processTopicSubscriptions(@NotNull String planCreatorId,
-											  @NotNull TopicSubscriptionsPayload payload,
+											  @NotNull InjectSubscriptionsPayload payload,
 									 		  @NotNull Socket clients, @NotNull Socket brokers,
+											  @NotNull KryoSerializer kryo) {
+			logger.warn("Unsupported operation, message is discarded");
+		}
+
+		@Override
+		public void processUnsubscribeTopic(@NotNull String planCreatorId,
+											  @NotNull UnsubscribeTopicPayload payload,
+											  @NotNull Socket clients, @NotNull Socket brokers,
 											  @NotNull KryoSerializer kryo) {
 			logger.warn("Unsupported operation, message is discarded");
 		}

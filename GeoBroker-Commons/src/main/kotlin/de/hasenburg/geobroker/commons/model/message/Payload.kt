@@ -2,7 +2,7 @@ package de.hasenburg.geobroker.commons.model.message
 
 import de.hasenburg.geobroker.commons.model.BrokerInfo
 import de.hasenburg.geobroker.commons.model.KryoSerializer
-import de.hasenburg.geobroker.commons.model.message.loadbalancer.ClientSubscriptionReasonCode
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.ClientReasonCode
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.Plan
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.PlanResult
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.TopicMetrics
@@ -31,10 +31,12 @@ sealed class Payload {
     data class BrokerForwardPingreqPayload(val clientIdentifier: String, val pingreqPayload: PINGREQPayload) : Payload()
 
     //LoadBalancer
-    data class ReqTopicSubscriptionsPayload(val taskId: String, val topic: String) : Payload()
-    data class ReqTopicSubscriptionsAckPayload(val taskId: String, val reasonCode: ReasonCode, val subscriptions: List<Subscription> = emptyList()) : Payload()
-    data class TopicSubscriptionsPayload(val subscriptions: List<Subscription> = emptyList()) : Payload()
-    data class TopicSubscriptionsAckPayload(val clientSubscriptionReasonCodes: List<ClientSubscriptionReasonCode> = emptyList()) : Payload()
+    data class ReqSubscriptionsPayload(val taskId: String, val topic: String) : Payload()
+    data class ReqSubscriptionsAckPayload(val taskId: String, val reasonCode: ReasonCode, val subscriptions: List<Subscription> = emptyList()) : Payload()
+    data class InjectSubscriptionsPayload(val taskId: String, val subscriptions: List<Subscription> = emptyList()) : Payload()
+    data class InjectSubscriptionsAckPayload(val taskId: String, val clientReasonCodes: List<ClientReasonCode> = emptyList()) : Payload()
+    data class UnsubscribeTopicPayload(val taskId: String, val topic: String): Payload()
+    data class UnsubscribeTopicAckPayload(val taskId: String, val clientReasonCodes: List<ClientReasonCode> = emptyList()): Payload()
     data class MetricsAnalyzePayload(val metrics: List<String> = emptyList()) : Payload()
     data class PlanPayload(val plan: List<Plan> = emptyList()) : Payload()
     data class MetricsPayload(val brokerId: String, val cpuLoad: Double, val publishedMessages: List<TopicMetrics> = emptyList()) : Payload()
@@ -82,10 +84,12 @@ private enum class CPT {
     BrokerForwardPublish, //
 
     //LoadBalancer
-    ReqTopicSubscriptions,
-    ReqTopicSubscriptionsAck,
-    TopicSubscriptionsPayload,
-    TopicSubscriptionsAckPayload,
+    ReqSubscriptions,
+    ReqSubscriptionsAck,
+    InjectSubscriptionsPayload,
+    InjectSubscriptionsAckPayload,
+    UnsubscribeTopicPayload,
+    UnsubscribeTopicAckPayload,
     MetricsAnalyze,
     Plan,
     Metrics,
@@ -116,10 +120,12 @@ fun payloadToZMsg(payload: Payload, kryo: KryoSerializer, identifier: String? = 
         is Payload.BrokerForwardPublishPayload -> CPT.BrokerForwardPublish
         is Payload.BrokerForwardSubscribePayload -> CPT.BrokerForwardSubscribe
         is Payload.BrokerForwardUnsubscribePayload -> CPT.BrokerForwardUnsubscribe
-        is Payload.ReqTopicSubscriptionsPayload -> CPT.ReqTopicSubscriptions
-        is Payload.ReqTopicSubscriptionsAckPayload -> CPT.ReqTopicSubscriptionsAck
-        is Payload.TopicSubscriptionsPayload -> CPT.TopicSubscriptionsPayload
-        is Payload.TopicSubscriptionsAckPayload -> CPT.TopicSubscriptionsAckPayload
+        is Payload.ReqSubscriptionsPayload -> CPT.ReqSubscriptions
+        is Payload.ReqSubscriptionsAckPayload -> CPT.ReqSubscriptionsAck
+        is Payload.InjectSubscriptionsPayload -> CPT.InjectSubscriptionsPayload
+        is Payload.InjectSubscriptionsAckPayload -> CPT.InjectSubscriptionsAckPayload
+        is Payload.UnsubscribeTopicPayload -> CPT.UnsubscribeTopicPayload
+        is Payload.UnsubscribeTopicAckPayload -> CPT.UnsubscribeTopicAckPayload
         is Payload.MetricsAnalyzePayload -> CPT.MetricsAnalyze
         is Payload.PlanPayload -> CPT.Plan
         is Payload.MetricsPayload -> CPT.Metrics
@@ -203,10 +209,12 @@ private fun KryoSerializer.read(arr: ByteArray, controlPacketType: CPT): Payload
         CPT.BrokerForwardUnsubscribe -> this.read(arr,
                 Payload.BrokerForwardUnsubscribePayload::class.java)
         CPT.BrokerForwardPublish -> this.read(arr, Payload.BrokerForwardPublishPayload::class.java)
-        CPT.ReqTopicSubscriptions -> this.read(arr, Payload.ReqTopicSubscriptionsPayload::class.java)
-        CPT.ReqTopicSubscriptionsAck -> this.read(arr, Payload.ReqTopicSubscriptionsAckPayload::class.java)
-        CPT.TopicSubscriptionsPayload -> this.read(arr, Payload.TopicSubscriptionsPayload::class.java)
-        CPT.TopicSubscriptionsAckPayload -> this.read(arr, Payload.TopicSubscriptionsAckPayload::class.java)
+        CPT.ReqSubscriptions -> this.read(arr, Payload.ReqSubscriptionsPayload::class.java)
+        CPT.ReqSubscriptionsAck -> this.read(arr, Payload.ReqSubscriptionsAckPayload::class.java)
+        CPT.InjectSubscriptionsPayload -> this.read(arr, Payload.InjectSubscriptionsPayload::class.java)
+        CPT.InjectSubscriptionsAckPayload -> this.read(arr, Payload.InjectSubscriptionsAckPayload::class.java)
+        CPT.UnsubscribeTopicPayload -> this.read(arr, Payload.UnsubscribeTopicPayload::class.java)
+        CPT.UnsubscribeTopicAckPayload -> this.read(arr, Payload.UnsubscribeTopicAckPayload::class.java)
         CPT.MetricsAnalyze -> this.read(arr, Payload.MetricsAnalyzePayload::class.java)
         CPT.Plan -> this.read(arr, Payload.PlanPayload::class.java)
         CPT.Metrics -> this.read(arr, Payload.MetricsPayload::class.java)

@@ -2,7 +2,7 @@ package de.hasenburg.geobroker.commons.model.message.loadbalancer;
 
 import de.hasenburg.geobroker.commons.model.message.ReasonCode;
 
-public class ClientSubscriptionReasonCode {
+public class ClientReasonCode {
     private String clientId;
     private ReasonCode reasonCode;
 
@@ -22,7 +22,7 @@ public class ClientSubscriptionReasonCode {
         this.reasonCode = reasonCode;
     }
 
-    public ClientSubscriptionReasonCode(String clientId, ReasonCode reasonCode) {
+    public ClientReasonCode(String clientId, ReasonCode reasonCode) {
         this.clientId = clientId;
         this.reasonCode = reasonCode;
     }

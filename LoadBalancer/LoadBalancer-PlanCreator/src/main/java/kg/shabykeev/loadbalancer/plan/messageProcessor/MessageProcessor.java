@@ -49,10 +49,11 @@ public class MessageProcessor {
             if (payload instanceof Payload.MetricsPayload && !isMigrationOn) {
                 msgQueue.add(msgCopy);
                 logger.info("added to queue" + msgCopy);
-            } else if (payload instanceof Payload.ReqTopicSubscriptionsAckPayload) {
-                //if (((Payload.ReqTopicSubscriptionsAckPayload) payload).getReasonCode() == ReasonCode.Success) {
-                    performTasks(payload);
-                //}
+            } else if (payload instanceof Payload.ReqSubscriptionsAckPayload ||
+                        payload instanceof Payload.InjectSubscriptionsPayload ||
+                        payload instanceof Payload.UnsubscribeTopicAckPayload) {
+                //TODO check reason codes
+                performTasks(payload);
             }
         }
 
@@ -73,7 +74,6 @@ public class MessageProcessor {
                         performTasks(null);
                     } else {
                         releasePlan();
-                        isMigrationOn = false;
                     }
                 }
             }
@@ -113,22 +113,31 @@ public class MessageProcessor {
 
     private void performTasks(Payload payload) {
         currentTask = this.tasks.poll();
+        if (currentTask == null) {
+            isMigrationOn = false;
+            releasePlan();
+            return;
+        }
 
         switch (currentTask.getTaskType()) {
             case REQ_SUBSCRIBERS:
-                Payload.ReqTopicSubscriptionsPayload reqPayload = new Payload.ReqTopicSubscriptionsPayload(currentTask.getTaskId(), currentTask.getTopic());
+                Payload.ReqSubscriptionsPayload reqPayload = new Payload.ReqSubscriptionsPayload(currentTask.getTaskId(), currentTask.getTopic());
                 ZMsg migMsg = PayloadKt.payloadToZMsg(reqPayload, kryo, currentTask.getServer());
                 migMsg.push(ZMsgType.MIGRATION_TASK.toString());
                 migMsg.send(pipe);
                 break;
             case INJECT_SUBSCRIBERS:
-                List<Subscription> subscriptions = ((Payload.ReqTopicSubscriptionsAckPayload) payload).getSubscriptions();
-                Payload.TopicSubscriptionsPayload subPayload = new Payload.TopicSubscriptionsPayload(subscriptions);
+                List<Subscription> subscriptions = ((Payload.ReqSubscriptionsAckPayload) payload).getSubscriptions();
+                Payload.InjectSubscriptionsPayload subPayload = new Payload.InjectSubscriptionsPayload(currentTask.getTaskId(), subscriptions);
                 ZMsg injMsg = PayloadKt.payloadToZMsg(subPayload, kryo, currentTask.getServer());
                 injMsg.push(ZMsgType.MIGRATION_TASK.toString());
                 injMsg.send(pipe);
                 break;
             case UNSUBSCRIBE:
+                Payload.UnsubscribeTopicPayload unsubPayload = new Payload.UnsubscribeTopicPayload(currentTask.getTaskId(), currentTask.getTopic());
+                ZMsg unsubMsg = PayloadKt.payloadToZMsg(unsubPayload, kryo, currentTask.getServer());
+                unsubMsg.push(ZMsgType.MIGRATION_TASK.toString());
+                unsubMsg.send(pipe);
                 break;
             default:
                 break;
