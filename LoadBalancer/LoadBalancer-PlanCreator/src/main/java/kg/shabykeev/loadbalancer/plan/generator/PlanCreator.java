@@ -39,10 +39,10 @@ public class PlanCreator {
     private List<Task> tasks = new LinkedList<>();
 
     /**
-     * Creates a plan based on incoming metrics
+     * Creates a plan based on incoming metrics from brokers.
      *
      * @param metrics ServerLoadMetrics and TopicMetrics of GeoBroker
-     * @return whether a plan is new and should be broadcasted
+     * @return PlanResult object
      */
     public PlanResult createPlan(List<String> metrics) {
         PlanResult result = new PlanResult();

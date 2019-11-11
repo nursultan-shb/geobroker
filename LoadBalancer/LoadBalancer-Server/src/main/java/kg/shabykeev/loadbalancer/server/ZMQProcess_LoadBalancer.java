@@ -153,7 +153,7 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
                 planMap.put(p.getTopic(), p.getServer());
             }
 
-            logger.info("New plan updates (a size {}) have been accepted", planList.size());
+            logger.info("New plan updates (size {}) have been accepted", planList.size());
         }
     }
 

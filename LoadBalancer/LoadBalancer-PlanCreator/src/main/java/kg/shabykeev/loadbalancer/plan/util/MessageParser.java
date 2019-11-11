@@ -22,6 +22,13 @@ public class MessageParser {
     private static KryoSerializer kryo = new KryoSerializer();
     private static final Logger logger = LogManager.getLogger();
 
+    /**
+     * Parses a list of String messages to Metrics class for further analysis.
+     * Leaves only latest metrics from brokers
+     *
+     * @param messages a list of metrics from brokers
+     * @return Metrics object that contains latest metrics from brokers
+     */
     public static Metrics parseMessage(List<String> messages) {
         ArrayList<ServerLoadMetrics> lmList = new ArrayList<>();
         ArrayList<TopicMetrics> topicPubMessagesList = new ArrayList<>();

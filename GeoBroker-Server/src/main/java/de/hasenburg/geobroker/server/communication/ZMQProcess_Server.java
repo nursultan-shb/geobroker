@@ -115,6 +115,7 @@ class ZMQProcess_Server extends ZMQProcess {
             if (payload instanceof Payload.ReqSubscriptionsAckPayload
                     || payload instanceof Payload.InjectSubscriptionsAckPayload
                     || payload instanceof Payload.UnsubscribeTopicAckPayload) {
+                msg.removeFirst();
                 msg.send(sockets.get(PIPE_INDEX));
             }
             else {

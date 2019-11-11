@@ -44,7 +44,6 @@ public class LoadAnalyzer {
     }
 
     public void handlePipeMessage() {
-        //metrics
         ZMsg msg = ZMsg.recvMsg(pipe);
         msg.send(dealer);
     }
