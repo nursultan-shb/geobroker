@@ -466,8 +466,8 @@ class DisGBAtPublisherMatchingLogic constructor(private val clientDirectory: Cli
         logger.warn("Unsupported operation, message is discarded")
     }
 
-    override fun processTopicSubscriptions(planCreatorId: String, payload: InjectSubscriptionsPayload,
-                                           clients: Socket, brokers: Socket, kryo: KryoSerializer) {
+    override fun processInjectSubscriptions(planCreatorId: String, payload: InjectSubscriptionsPayload,
+                                            clients: Socket, brokers: Socket, kryo: KryoSerializer) {
         logger.warn("Unsupported operation, message is discarded")
     }
 

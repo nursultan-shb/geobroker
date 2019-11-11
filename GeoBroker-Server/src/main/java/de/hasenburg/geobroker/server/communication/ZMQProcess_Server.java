@@ -108,7 +108,9 @@ class ZMQProcess_Server extends ZMQProcess {
     private void handleBackendMessage(ZMsg backendMsg) {
         ZMsg msg = backendMsg.duplicate();
         Payload payload = PayloadKt.transformZMsg(backendMsg, kryo);
-        if (payload instanceof Payload.ReqSubscriptionsAckPayload || payload instanceof Payload.InjectSubscriptionsAckPayload) {
+        if (payload instanceof Payload.ReqSubscriptionsAckPayload
+                || payload instanceof Payload.InjectSubscriptionsAckPayload
+                || payload instanceof Payload.UnsubscribeTopicAckPayload) {
             msg.send(sockets.get(PIPE_INDEX));
         }
         else {

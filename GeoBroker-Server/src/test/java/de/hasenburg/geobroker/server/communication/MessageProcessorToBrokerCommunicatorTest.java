@@ -181,10 +181,10 @@ public class MessageProcessorToBrokerCommunicatorTest {
 		}
 
 		@Override
-		public void processTopicSubscriptions(@NotNull String planCreatorId,
-											  @NotNull InjectSubscriptionsPayload payload,
-									 		  @NotNull Socket clients, @NotNull Socket brokers,
-											  @NotNull KryoSerializer kryo) {
+		public void processInjectSubscriptions(@NotNull String planCreatorId,
+                                               @NotNull InjectSubscriptionsPayload payload,
+                                               @NotNull Socket clients, @NotNull Socket brokers,
+                                               @NotNull KryoSerializer kryo) {
 			logger.warn("Unsupported operation, message is discarded");
 		}
 

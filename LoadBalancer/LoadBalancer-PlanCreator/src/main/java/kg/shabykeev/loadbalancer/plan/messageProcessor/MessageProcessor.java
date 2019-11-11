@@ -4,7 +4,6 @@ import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.commons.model.message.Subscription;
-import de.hasenburg.geobroker.commons.model.message.loadbalancer.Plan;
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.PlanResult;
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.Task;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
@@ -24,7 +23,6 @@ public class MessageProcessor {
     private LinkedList<ZMsg> msgQueue = new LinkedList<>();
     private Task currentTask;
     private PlanResult planResult;
-    private List<Plan> plan = new ArrayList<>();
     private LinkedList<Task> tasks = new LinkedList<>();
     private boolean isMigrationOn = false;
 
@@ -50,7 +48,7 @@ public class MessageProcessor {
                 msgQueue.add(msgCopy);
                 logger.info("added to queue" + msgCopy);
             } else if (payload instanceof Payload.ReqSubscriptionsAckPayload ||
-                        payload instanceof Payload.InjectSubscriptionsPayload ||
+                        payload instanceof Payload.InjectSubscriptionsAckPayload ||
                         payload instanceof Payload.UnsubscribeTopicAckPayload) {
                 //TODO check reason codes
                 performTasks(payload);
@@ -67,9 +65,10 @@ public class MessageProcessor {
                 PlanResult planResult = ((Payload.PlanResultPayload) payload).getPlanResult();
 
                 if (planResult.isNewPlan()) {
+                    this.planResult = planResult;
+
                     if (planResult.getTasks().size() > 0) {
                         isMigrationOn = true;
-                        this.planResult = planResult;
                         this.tasks.addAll(planResult.getTasks());
                         performTasks(null);
                     } else {
@@ -101,14 +100,13 @@ public class MessageProcessor {
     }
 
     private void releasePlan() {
-        Payload.PlanPayload payload = new Payload.PlanPayload(plan);
+        Payload.PlanPayload payload = new Payload.PlanPayload(planResult.getPlan());
         ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, pairSocket.getLastEndpoint());
         msg.push(ZMsgType.PLAN.toString());
 
         msg.send(pipe);
         logger.info("Plan " + planResult.getPlanNumber() + " has been released");
         this.planResult = null;
-        this.plan.clear();
     }
 
     private void performTasks(Payload payload) {

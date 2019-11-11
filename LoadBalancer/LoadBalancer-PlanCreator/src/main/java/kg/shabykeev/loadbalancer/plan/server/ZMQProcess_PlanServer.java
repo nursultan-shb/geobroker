@@ -23,8 +23,8 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
     private static final Logger logger = LogManager.getLogger();
     private KryoSerializer kryo = new KryoSerializer();
 
-    private String frontendAddress = "tcp://127.0.0.1:6061";
-    private String backendAddress = "tcp://127.0.0.1:6062";
+    private String frontendAddress = "";
+    private String backendAddress = "";
     private Set<String> loadBalancers = new HashSet<>();
 
     private ZContext context;

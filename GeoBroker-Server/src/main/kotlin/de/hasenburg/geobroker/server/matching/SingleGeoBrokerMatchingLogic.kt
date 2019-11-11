@@ -159,8 +159,8 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
         logger.debug("MIGRATION: Requested topic subscriptions: topic {}, size of subscriptions {}", payload.topic, subscriptions.size)
     }
 
-    override fun processTopicSubscriptions(planCreatorId: String, payload: InjectSubscriptionsPayload,
-                                           clients: Socket, brokers: Socket, kryo: KryoSerializer) {
+    override fun processInjectSubscriptions(planCreatorId: String, payload: InjectSubscriptionsPayload,
+                                            clients: Socket, brokers: Socket, kryo: KryoSerializer) {
 
         val clientReasonCodes = mutableListOf<ClientReasonCode>()
         for (s in payload.subscriptions) {
@@ -174,7 +174,7 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
             clientReasonCodes.add(ClientReasonCode(s.getClientId(), reasonCode))
         }
 
-        val response = payloadToZMsg(InjectSubscriptionsAckPayload(payload.taskId, clientReasonCodes), kryo, planCreatorId)
+        val response = payloadToZMsg(InjectSubscriptionsAckPayload(payload.taskId, clientReasonCodes), kryo)
         sendResponse(response, clients)
 
         logger.debug("MIGRATION: Received injection of subscriptions. Size {}", payload.subscriptions.size)

@@ -148,7 +148,7 @@ class ZMQProcess_MessageProcessor(private val brokerId: String, private val numb
                         clientsSocket,
                         brokersSocket,
                         kryo)
-                is Payload.InjectSubscriptionsPayload -> matchingLogic.processTopicSubscriptions(message.first,
+                is Payload.InjectSubscriptionsPayload -> matchingLogic.processInjectSubscriptions(message.first,
                         message.second as Payload.InjectSubscriptionsPayload,
                         clientsSocket,
                         brokersSocket,
