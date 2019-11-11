@@ -153,7 +153,7 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
     override fun processReqTopicSubscriptions(planCreatorId: String, payload: ReqSubscriptionsPayload,
                                               clients: Socket, brokers: Socket, kryo: KryoSerializer) {
         val subscriptions = clientDirectory.getTopicSubscriptions(payload.topic)
-        val response = payloadToZMsg(ReqSubscriptionsAckPayload(payload.taskId, ReasonCode.Success, subscriptions), kryo)
+        val response = payloadToZMsg(ReqSubscriptionsAckPayload(payload.taskId, ReasonCode.Success, subscriptions), kryo, planCreatorId)
         sendResponse(response, clients)
 
         logger.debug("MIGRATION: Requested topic subscriptions: topic {}, size of subscriptions {}", payload.topic, subscriptions.size)
@@ -174,7 +174,7 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
             clientReasonCodes.add(ClientReasonCode(s.getClientId(), reasonCode))
         }
 
-        val response = payloadToZMsg(InjectSubscriptionsAckPayload(payload.taskId, clientReasonCodes), kryo)
+        val response = payloadToZMsg(InjectSubscriptionsAckPayload(payload.taskId, clientReasonCodes), kryo, planCreatorId)
         sendResponse(response, clients)
 
         logger.debug("MIGRATION: Received injection of subscriptions. Size {}", payload.subscriptions.size)
@@ -194,7 +194,7 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
             clientReasonCodes.add(ClientReasonCode(subscription.getClientId(), reasonCode))
         }
 
-        val response = payloadToZMsg(UnsubscribeTopicAckPayload(payload.taskId, clientReasonCodes), kryo)
+        val response = payloadToZMsg(UnsubscribeTopicAckPayload(payload.taskId, clientReasonCodes), kryo, planCreatorId)
         sendResponse(response, clients)
 
         logger.debug("MIGRATION: Requested topic unsubscription: topic {}", payload.topic)

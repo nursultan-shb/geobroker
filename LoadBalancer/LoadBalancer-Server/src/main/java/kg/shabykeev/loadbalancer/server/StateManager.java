@@ -39,8 +39,9 @@ public class StateManager {
     }
 
     public void handleDealerMessage() {
-        ZMsg msg = ZMsg.recvMsg(dealer);
-        Payload payload = PayloadKt.transformZMsg(msg, kryo);
+        ZMsg dealerMessage = ZMsg.recvMsg(dealer);
+        ZMsg msg = dealerMessage.duplicate();
+        Payload payload = PayloadKt.transformZMsg(dealerMessage, kryo);
         if (payload != null) {
             if (payload instanceof Payload.PINGRESPPayload) {
 

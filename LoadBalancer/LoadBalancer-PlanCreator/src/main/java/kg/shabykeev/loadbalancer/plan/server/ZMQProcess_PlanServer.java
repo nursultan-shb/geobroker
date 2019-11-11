@@ -128,15 +128,9 @@ public class ZMQProcess_PlanServer extends ZMQProcess {
     }
 
     private void releasePlan(ZMsg msg) {
-        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(msg, kryo);
-        if (pair != null) {
-            Payload payload = pair.getSecond();
-            if (payload instanceof Payload.PlanPayload) {
-                for (String lbId : loadBalancers) {
-                    msg.push(lbId);
-                    msg.send(frontend);
-                }
-            }
+        for (String lbId : loadBalancers) {
+            msg.push(lbId);
+            msg.send(frontend);
         }
     }
 

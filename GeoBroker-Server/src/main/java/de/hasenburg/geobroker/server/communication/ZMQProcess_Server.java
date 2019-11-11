@@ -7,6 +7,7 @@ import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.server.loadAnalysis.LoadAnalyzerAgent;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
+import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.*;
@@ -107,16 +108,20 @@ class ZMQProcess_Server extends ZMQProcess {
 
     private void handleBackendMessage(ZMsg backendMsg) {
         ZMsg msg = backendMsg.duplicate();
-        Payload payload = PayloadKt.transformZMsg(backendMsg, kryo);
-        if (payload instanceof Payload.ReqSubscriptionsAckPayload
-                || payload instanceof Payload.InjectSubscriptionsAckPayload
-                || payload instanceof Payload.UnsubscribeTopicAckPayload) {
-            msg.send(sockets.get(PIPE_INDEX));
-        }
-        else {
-            msg.push(frontendAddress);
-            if (!msg.send(sockets.get(FRONTEND_INDEX))) {
-                logger.warn("Dropping response to client as HWM reached.");
+        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(backendMsg, kryo);
+        if (pair != null) {
+            Payload payload = pair.getSecond();
+
+            if (payload instanceof Payload.ReqSubscriptionsAckPayload
+                    || payload instanceof Payload.InjectSubscriptionsAckPayload
+                    || payload instanceof Payload.UnsubscribeTopicAckPayload) {
+                msg.send(sockets.get(PIPE_INDEX));
+            }
+            else {
+                msg.push(frontendAddress);
+                if (!msg.send(sockets.get(FRONTEND_INDEX))) {
+                    logger.warn("Dropping response to client as HWM reached.");
+                }
             }
         }
     }

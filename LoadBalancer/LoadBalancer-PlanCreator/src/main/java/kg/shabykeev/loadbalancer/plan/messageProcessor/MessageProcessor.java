@@ -101,7 +101,7 @@ public class MessageProcessor {
 
     private void releasePlan() {
         Payload.PlanPayload payload = new Payload.PlanPayload(planResult.getPlan());
-        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, pairSocket.getLastEndpoint());
+        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);
         msg.push(ZMsgType.PLAN.toString());
 
         msg.send(pipe);

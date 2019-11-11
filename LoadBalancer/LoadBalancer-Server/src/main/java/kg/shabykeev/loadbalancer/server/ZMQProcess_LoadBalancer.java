@@ -7,6 +7,7 @@ import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.commons.model.message.ReasonCode;
+import de.hasenburg.geobroker.commons.model.message.loadbalancer.Plan;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -145,17 +146,14 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     }
 
     private void updatePlan(ZMsg msg) {
-        String strPlan = msg.popString();
-        if (strPlan.length() > 3) {
-            planMap.clear();
-
-            logger.info("\nReceived a new plan update(s)");
-
-            for (String el: strPlan.split("\\|")){
-                String[] values = el.split("=");
-                planMap.put(values[0].trim(), values[1].trim());
-                logger.info(el);
+        Payload payload = PayloadKt.transformZMsg(msg, kryo);
+        if (payload instanceof Payload.PlanPayload) {
+            List<Plan> planList = ((Payload.PlanPayload)payload).getPlan();
+            for (Plan p: planList) {
+                planMap.put(p.getTopic(), p.getServer());
             }
+
+            logger.info("New plan updates (a size {}) have been accepted", planList.size());
         }
     }
 
