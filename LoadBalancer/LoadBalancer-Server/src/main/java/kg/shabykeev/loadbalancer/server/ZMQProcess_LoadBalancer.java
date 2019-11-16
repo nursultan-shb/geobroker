@@ -15,13 +15,13 @@ import org.apache.logging.log4j.Logger;
 import org.zeromq.*;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 public class ZMQProcess_LoadBalancer extends ZMQProcess {
 
     private static final Logger logger = LogManager.getLogger();
+    private KryoSerializer kryo = new KryoSerializer();
+    private PlanManager planManager = new PlanManager(logger);
 
     // Address and port of server frontend
     private String ip;
@@ -34,25 +34,11 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     private final int BACKEND_INDEX = 1;
     private final int STATE_PIPE_INDEX = 2;
 
-    private String planCreatorAddress;
-
-    private HashSet<String> brokers = new HashSet<>();
-    private HashMap<String, String> planMap = new HashMap<>();
-    private Boolean isDefaultPlanActive = true;
-
-    private KryoSerializer kryo = new KryoSerializer();
-
     ZMQProcess_LoadBalancer(String identity, String ip, int frontendPort, int backendPort, String planCreatorAddress) {
         super(identity);
         this.ip = ip;
         this.frontend_port = frontendPort;
         this.backend_port = backendPort;
-        this.planCreatorAddress = planCreatorAddress;
-
-        planMap.put("red", "broker-server-1");
-        planMap.put("rose", "broker-server-1");
-        planMap.put("blue", "broker-server-2");
-        planMap.put("ocean", "broker-server-1");
     }
 
     @Override
@@ -107,15 +93,18 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
             Payload payload = pair.getSecond();
             if (payload instanceof Payload.SUBSCRIBEPayload) {
                 String subTopic = ((Payload.SUBSCRIBEPayload) payload).getTopic().getTopic();
-                msgCopy.push(planMap.get(subTopic));
+                msgCopy.push(planManager.getServer(subTopic));
                 msgCopy.send(sockets.get(BACKEND_INDEX));
-            }
-            else if (payload instanceof Payload.PUBLISHPayload){
+            } else if (payload instanceof Payload.PUBLISHPayload) {
                 String pubTopic = ((Payload.PUBLISHPayload) payload).getTopic().getTopic();
-                msgCopy.push(planMap.get(pubTopic));
+                msgCopy.push(planManager.getServer(pubTopic));
+                msgCopy.send(sockets.get(BACKEND_INDEX));
+            } else if (payload instanceof Payload.UNSUBSCRIBEPayload) {
+                String topic = ((Payload.UNSUBSCRIBEPayload) payload).getTopic().getTopic();
+                msgCopy.push(planManager.getServer(topic));
                 msgCopy.send(sockets.get(BACKEND_INDEX));
             } else {
-                for (String broker : brokers) {
+                for (String broker : planManager.getBrokers()) {
                     ZMsg m = msgCopy.duplicate();
                     m.push(broker);
                     m.send(sockets.get(BACKEND_INDEX));
@@ -128,7 +117,7 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
         String brokerServer = msg.popString();
 
         if (msg.getFirst().toString().equals(ZMsgType.PINGREQ.toString())) {
-            brokers.add(brokerServer);
+            planManager.addServer(brokerServer);
 
             ZMsg reply = PayloadKt.payloadToZMsg(new Payload.PINGRESPPayload(ReasonCode.Success), kryo, brokerServer);
             reply.send(sockets.get(BACKEND_INDEX));
@@ -148,12 +137,13 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     private void updatePlan(ZMsg msg) {
         Payload payload = PayloadKt.transformZMsg(msg, kryo);
         if (payload instanceof Payload.PlanPayload) {
-            List<Plan> planList = ((Payload.PlanPayload)payload).getPlan();
-            for (Plan p: planList) {
-                planMap.put(p.getTopic(), p.getServer());
+            List<Plan> planList = ((Payload.PlanPayload) payload).getPlan();
+            for (Plan p : planList) {
+                planManager.addPlan(p.getTopic(), p.getServer());
             }
 
             logger.info("New plan updates (size {}) have been accepted", planList.size());
+            planManager.printPlan();
         }
     }
 
