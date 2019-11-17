@@ -1,4 +1,4 @@
-package kg.shabykeev.loadbalancer.server;
+package kg.shabykeev.loadbalancer.agent;
 
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
@@ -12,7 +12,7 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
-public class StateManager {
+public class MessageProcessor {
     private static final Logger logger = LogManager.getLogger();
     private KryoSerializer kryo = new KryoSerializer();
 
@@ -24,7 +24,7 @@ public class StateManager {
 
     public ZMQ.Socket dealer;
 
-    public StateManager(ZContext ctx, ZMQ.Socket pipe) {
+    public MessageProcessor(ZContext ctx, ZMQ.Socket pipe) {
         this.ctx = ctx;
         this.pipe = pipe;
         this.dealer = ctx.createSocket(SocketType.DEALER);

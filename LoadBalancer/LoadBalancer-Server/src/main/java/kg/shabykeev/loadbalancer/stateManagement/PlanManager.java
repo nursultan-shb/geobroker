@@ -1,4 +1,4 @@
-package kg.shabykeev.loadbalancer.server;
+package kg.shabykeev.loadbalancer.stateManagement;
 
 import org.apache.logging.log4j.Logger;
 
@@ -58,6 +58,7 @@ public class PlanManager {
     private String getNextServer(String topic) {
         String server = brokers.get(nextRoundRobinServerId);
         planMap.put(topic, server);
+        logger.info("Default plan insert: {} : {}", topic, server);
         nextRoundRobinServerId = nextRoundRobinServerId == brokers.size() - 1 ? 0 : nextRoundRobinServerId + 1;
 
         return server;

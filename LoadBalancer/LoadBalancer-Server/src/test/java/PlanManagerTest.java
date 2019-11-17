@@ -1,4 +1,4 @@
-import kg.shabykeev.loadbalancer.server.PlanManager;
+import kg.shabykeev.loadbalancer.stateManagement.PlanManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;

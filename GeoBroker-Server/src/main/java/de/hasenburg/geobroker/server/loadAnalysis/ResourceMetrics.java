@@ -1,4 +1,4 @@
-package de.hasenburg.geobroker.server.communication;
+package de.hasenburg.geobroker.server.loadAnalysis;
 
 import de.hasenburg.geobroker.commons.model.message.Topic;
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.TopicMetrics;

@@ -8,7 +8,10 @@ import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.commons.model.message.ReasonCode;
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.Plan;
+import kg.shabykeev.loadbalancer.agent.Agent;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
+import kg.shabykeev.loadbalancer.stateManagement.ClientManager;
+import kg.shabykeev.loadbalancer.stateManagement.PlanManager;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,6 +25,7 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     private static final Logger logger = LogManager.getLogger();
     private KryoSerializer kryo = new KryoSerializer();
     private PlanManager planManager = new PlanManager(logger);
+    private ClientManager clientManager = new ClientManager(logger);
 
     // Address and port of server frontend
     private String ip;
@@ -86,47 +90,72 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
         }
     }
 
-    private void handleFrontendMessage(ZMsg msg) {
-        ZMsg msgCopy = msg.duplicate();
-        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(msg, kryo);
+    private void handleFrontendMessage(ZMsg frontendMsg) {
+        ZMsg msg = frontendMsg.duplicate();
+        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(frontendMsg, kryo);
         if (pair != null) {
             Payload payload = pair.getSecond();
             if (payload instanceof Payload.SUBSCRIBEPayload) {
                 String subTopic = ((Payload.SUBSCRIBEPayload) payload).getTopic().getTopic();
-                msgCopy.push(planManager.getServer(subTopic));
-                msgCopy.send(sockets.get(BACKEND_INDEX));
+                msg.push(planManager.getServer(subTopic));
+                msg.send(sockets.get(BACKEND_INDEX));
             } else if (payload instanceof Payload.PUBLISHPayload) {
                 String pubTopic = ((Payload.PUBLISHPayload) payload).getTopic().getTopic();
-                msgCopy.push(planManager.getServer(pubTopic));
-                msgCopy.send(sockets.get(BACKEND_INDEX));
+                msg.push(planManager.getServer(pubTopic));
+                msg.send(sockets.get(BACKEND_INDEX));
             } else if (payload instanceof Payload.UNSUBSCRIBEPayload) {
                 String topic = ((Payload.UNSUBSCRIBEPayload) payload).getTopic().getTopic();
-                msgCopy.push(planManager.getServer(topic));
-                msgCopy.send(sockets.get(BACKEND_INDEX));
-            } else {
-                for (String broker : planManager.getBrokers()) {
-                    ZMsg m = msgCopy.duplicate();
-                    m.push(broker);
-                    m.send(sockets.get(BACKEND_INDEX));
-                }
+                msg.push(planManager.getServer(topic));
+                msg.send(sockets.get(BACKEND_INDEX));
+            } else if (payload instanceof Payload.CONNECTPayload) {
+                clientManager.addClient(pair.getFirst());
+                sendToBrokers(msg);
+            } else if (payload instanceof Payload.PINGREQPayload) {
+                clientManager.isSetPingRespRequired(pair.getFirst(), true);
+                sendToBrokers(msg);
+            } else if (payload instanceof Payload.DISCONNECTPayload) {
+                clientManager.removeClient(pair.getFirst());
+                sendToBrokers(msg);
             }
         }
     }
 
-    private void handleBackendMessage(ZMsg msg) {
-        String brokerServer = msg.popString();
+    private void handleBackendMessage(ZMsg backendMsg) {
+        String brokerServer = backendMsg.popString();
 
-        if (msg.getFirst().toString().equals(ZMsgType.PINGREQ.toString())) {
+        if (backendMsg.getFirst().toString().equals(ZMsgType.PINGREQ.toString())) {
             planManager.addServer(brokerServer);
 
             ZMsg reply = PayloadKt.payloadToZMsg(new Payload.PINGRESPPayload(ReasonCode.Success), kryo, brokerServer);
             reply.send(sockets.get(BACKEND_INDEX));
-            msg.destroy();
+            backendMsg.destroy();
             return;
         }
 
-        if (!msg.send(sockets.get(FRONTEND_INDEX))) {
-            logger.warn("Dropping response to client as HWM reached.");
+        boolean sendMessage = true;
+        ZMsg msg = backendMsg.duplicate();
+        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(backendMsg, kryo);
+        if (pair != null) {
+            Payload payload = pair.getSecond();
+            if (payload instanceof Payload.CONNACKPayload) {
+                sendMessage = clientManager.isConAckRequired(pair.getFirst());
+                if (sendMessage) {
+                    clientManager.setIsConAckRequired(pair.getFirst(), false);
+                }
+            } else if (payload instanceof Payload.PINGRESPPayload) {
+                sendMessage = clientManager.isPingRespRequired(pair.getFirst());
+                if (sendMessage) {
+                    clientManager.isSetPingRespRequired(pair.getFirst(), false);
+                }
+            }
+        }
+
+        if (sendMessage) {
+            if (!msg.send(sockets.get(FRONTEND_INDEX))) {
+                logger.warn("Dropping response to client as HWM reached.");
+            }
+        } else {
+            msg.destroy();
         }
     }
 
@@ -138,6 +167,7 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
         Payload payload = PayloadKt.transformZMsg(msg, kryo);
         if (payload instanceof Payload.PlanPayload) {
             List<Plan> planList = ((Payload.PlanPayload) payload).getPlan();
+
             for (Plan p : planList) {
                 planManager.addPlan(p.getTopic(), p.getServer());
             }
@@ -147,12 +177,19 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
         }
     }
 
-    //region shutdownCompleted
+    private void sendToBrokers(ZMsg msg) {
+        for (String broker : planManager.getBrokers()) {
+            ZMsg m = msg.duplicate();
+            m.push(broker);
+            m.send(sockets.get(BACKEND_INDEX));
+        }
+    }
+
     @Override
     protected void shutdownCompleted() {
         logger.info("Shut down ZMQProcess_Server {}", "");
     }
-    //endregion
+
 
     @Override
     protected void utilizationCalculated(double utilization) {

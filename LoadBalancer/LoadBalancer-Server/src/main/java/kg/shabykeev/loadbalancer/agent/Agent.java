@@ -1,4 +1,4 @@
-package kg.shabykeev.loadbalancer.server;
+package kg.shabykeev.loadbalancer.agent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,7 +8,7 @@ import org.zeromq.ZThread;
 
 public class Agent implements ZThread.IAttachedRunnable {
     private static final Logger logger = LogManager.getLogger();
-    private StateManager stateManager;
+    private MessageProcessor messageProcessor;
 
     private final int PIPE_INDEX = 0;
     private final int DEALER_INDEX = 1;
@@ -17,26 +17,26 @@ public class Agent implements ZThread.IAttachedRunnable {
     @Override
     public void run(Object[] args, ZContext context, ZMQ.Socket pipe) {
 
-        stateManager = new StateManager(context, pipe);
-        stateManager.connectSockets();
+        messageProcessor = new MessageProcessor(context, pipe);
+        messageProcessor.connectSockets();
 
         ZMQ.Poller poller = context.createPoller(2);
-        poller.register(stateManager.pipe, ZMQ.Poller.POLLIN);
-        poller.register(stateManager.dealer, ZMQ.Poller.POLLIN);
+        poller.register(messageProcessor.pipe, ZMQ.Poller.POLLIN);
+        poller.register(messageProcessor.dealer, ZMQ.Poller.POLLIN);
 
         while (!Thread.currentThread().isInterrupted()) {
             poller.poll(100);
 
             if (poller.pollin(PIPE_INDEX)) {
-                stateManager.handlePipeMessage();
+                messageProcessor.handlePipeMessage();
             }
 
             if (poller.pollin(DEALER_INDEX)){
-                stateManager.handleDealerMessage();
+                messageProcessor.handleDealerMessage();
             }
 
             if (System.currentTimeMillis() - lastPlanCreatorPingTime >= 15000) {
-                stateManager.ping();
+                messageProcessor.ping();
                 lastPlanCreatorPingTime = System.currentTimeMillis();
             }
         }

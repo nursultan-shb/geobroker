@@ -5,7 +5,7 @@ import de.hasenburg.geobroker.commons.model.message.Payload.*
 import de.hasenburg.geobroker.commons.model.message.ReasonCode
 import de.hasenburg.geobroker.commons.model.message.loadbalancer.ClientReasonCode
 import de.hasenburg.geobroker.commons.model.message.payloadToZMsg
-import de.hasenburg.geobroker.server.communication.ResourceMetrics
+import de.hasenburg.geobroker.server.loadAnalysis.ResourceMetrics
 import de.hasenburg.geobroker.server.storage.TopicAndGeofenceMapper
 import de.hasenburg.geobroker.server.storage.client.ClientDirectory
 import org.apache.logging.log4j.LogManager

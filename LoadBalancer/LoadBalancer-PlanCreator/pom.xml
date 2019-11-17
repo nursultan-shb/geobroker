@@ -12,6 +12,55 @@
     <groupId>kg.shabykeev</groupId>
     <artifactId>LoadBalancer-PlanCreator</artifactId>
     <version>1.0</version>
+
+    <build>
+        <finalName>LoadBalancer-PlanCreator</finalName>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>kg.shabykeev.loadbalancer.plan.server.PlanServer</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerVersion>1.8</compilerVersion>
+                    <fork>true</fork>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>kg.shabykeev</groupId>
@@ -25,13 +74,6 @@
             <version>1.2</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>de.hasenburg</groupId>
-            <artifactId>GeoBroker-Commons</artifactId>
-            <version>1.2</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
-
 
 </project>

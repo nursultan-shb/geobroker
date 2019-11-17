@@ -6,6 +6,7 @@ import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.server.loadAnalysis.LoadAnalyzerAgent;
+import de.hasenburg.geobroker.server.loadAnalysis.ResourceMetrics;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import kotlin.Pair;
 import org.apache.logging.log4j.LogManager;
