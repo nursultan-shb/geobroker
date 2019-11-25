@@ -246,7 +246,7 @@ class ConfMultiFile(parser: ArgParser) {
 
     val serverPort by parser
         .storing("-p", "--port", help = "port of the GeoBroker server") { this.toInt() }
-        .default(5559)
+        .default(7225)
 
     val logConfFile by parser
         .storing("-l", "--log-config", help = "config file for log4j")

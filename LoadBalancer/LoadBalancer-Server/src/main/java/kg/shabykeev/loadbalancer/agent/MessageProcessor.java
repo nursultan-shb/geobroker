@@ -4,7 +4,7 @@ import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.commons.model.spatial.Location;
-import kg.shabykeev.loadbalancer.commons.util.ZHelper;
+import de.hasenburg.geobroker.commons.util.ZHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.SocketType;

@@ -5,6 +5,7 @@ import de.hasenburg.geobroker.commons.communication.ZMQProcess;
 import de.hasenburg.geobroker.commons.model.KryoSerializer;
 import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
+import de.hasenburg.geobroker.commons.util.ZHelper;
 import de.hasenburg.geobroker.server.loadAnalysis.LoadAnalyzerAgent;
 import de.hasenburg.geobroker.server.loadAnalysis.ResourceMetrics;
 import kg.shabykeev.loadbalancer.commons.ZMsgType;
@@ -60,11 +61,12 @@ class ZMQProcess_Server extends ZMQProcess {
         frontend.setHWM(10000);
         frontendAddress = "tcp://" + ip + ":" + port;
 
-        this.brokerIdentity = "broker-server-1"; //ZHelper.setId(identity, frontend);
+        this.brokerIdentity = ZHelper.setId(identity, frontend);
         frontend.setIdentity(this.brokerIdentity.getBytes(ZMQ.CHARSET));
         frontend.connect(frontendAddress);
         frontend.setSendTimeOut(1);
         socketArray[FRONTEND_INDEX] = frontend;
+        logger.info("GeoBroker identity: {}", this.brokerIdentity);
 
         Socket backend = context.createSocket(SocketType.DEALER);
         backend.setHWM(10000);
@@ -177,7 +179,7 @@ class ZMQProcess_Server extends ZMQProcess {
     }
 
     private ZMsg getLoadMetrics() {
-        Payload.MetricsPayload payload = new Payload.MetricsPayload(this.brokerIdentity, 80, ResourceMetrics.getPublishedMessages(this.brokerIdentity));
+        Payload.MetricsPayload payload = new Payload.MetricsPayload(this.brokerIdentity, cpuUtilization, ResourceMetrics.getPublishedMessages(this.brokerIdentity));
         ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);
         ResourceMetrics.clear();
 

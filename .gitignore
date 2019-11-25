@@ -10,3 +10,4 @@ test-log.xml
 configuration.toml
 wasReceived.txt
 wasSent.txt
+multifile/
