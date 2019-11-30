@@ -14,7 +14,7 @@
     <version>1.0</version>
 
     <build>
-        <finalName>LoadBalancer-PlanCreator</finalName>
+        <finalName>plan-creator-server</finalName>
 
         <plugins>
             <plugin>
@@ -32,12 +32,11 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
                 <configuration>
-                    <compilerVersion>1.8</compilerVersion>
-                    <fork>true</fork>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>11</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -58,6 +57,25 @@
                 </executions>
             </plugin>
 
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <configuration>
+                            <tasks>
+                                <copy file="${project.basedir}/src/main/resources/configuration.toml" todir="${project.build.directory}"
+                                      overwrite="true">
+                                </copy>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
