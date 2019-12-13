@@ -2,7 +2,9 @@ package kg.shabykeev.loadbalancer.stateManagement;
 
 public class ClientState {
     private boolean isConnAckRequired;
-    private boolean isPingRespRequired;
+
+    public int pingReq = 0;
+    public int pingResp = 0;
 
     public ClientState(boolean isConnAckRequired) {
         this.isConnAckRequired = isConnAckRequired;
@@ -17,11 +19,14 @@ public class ClientState {
     }
 
     public boolean isPingRespRequired() {
-        return isPingRespRequired;
+        return this.pingReq != this.pingResp;
     }
 
-    public void setPingRespRequired(boolean pingRespRequired) {
-        isPingRespRequired = pingRespRequired;
+    public void incrementPingReq() {
+        this.pingReq++;
     }
 
+    public void incrementPingResp() {
+        this.pingResp++;
+    }
 }

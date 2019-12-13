@@ -56,4 +56,11 @@ public class MessageProcessor {
         ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);
         msg.send(dealer);
     }
+
+    protected void destroy() {
+        this.dealer.setLinger(1);
+        this.dealer.close();
+        this.dealer.setLinger(1);
+        this.pipe.close();
+    }
 }

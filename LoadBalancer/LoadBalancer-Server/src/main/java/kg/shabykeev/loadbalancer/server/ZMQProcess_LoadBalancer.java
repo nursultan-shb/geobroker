@@ -67,7 +67,7 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
 
         Agent agent = new Agent();
         Object[] args = new Object[0];
-        state_pipe = ZThread.fork(context, agent, args);
+        state_pipe = ZThread.fork(new ZContext(), agent, args);
         socketArray[STATE_PIPE_INDEX] = state_pipe;
 
         return Arrays.asList(socketArray);
@@ -111,10 +111,9 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
                 clientManager.addClient(pair.getFirst());
                 sendToBrokers(msg);
             } else if (payload instanceof Payload.PINGREQPayload) {
-                clientManager.isSetPingRespRequired(pair.getFirst(), true);
+                clientManager.incrementPingReq(pair.getFirst());
                 sendToBrokers(msg);
             } else if (payload instanceof Payload.DISCONNECTPayload) {
-                clientManager.removeClient(pair.getFirst());
                 sendToBrokers(msg);
             }
         }
@@ -124,31 +123,12 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
         String brokerServer = backendMsg.popString();
 
         if (backendMsg.getFirst().toString().equals(ZMsgType.PINGREQ.toString())) {
-            planManager.addServer(brokerServer);
-
-            ZMsg reply = PayloadKt.payloadToZMsg(new Payload.PINGRESPPayload(ReasonCode.Success), kryo, brokerServer);
-            reply.send(sockets.get(BACKEND_INDEX));
-            backendMsg.destroy();
-            return;
+           addBroker(backendMsg, brokerServer);
+           return;
         }
 
-        boolean sendMessage = true;
         ZMsg msg = backendMsg.duplicate();
-        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(backendMsg, kryo);
-        if (pair != null) {
-            Payload payload = pair.getSecond();
-            if (payload instanceof Payload.CONNACKPayload) {
-                sendMessage = clientManager.isConAckRequired(pair.getFirst());
-                if (sendMessage) {
-                    clientManager.setIsConAckRequired(pair.getFirst(), false);
-                }
-            } else if (payload instanceof Payload.PINGRESPPayload) {
-                sendMessage = clientManager.isPingRespRequired(pair.getFirst());
-                if (sendMessage) {
-                    clientManager.isSetPingRespRequired(pair.getFirst(), false);
-                }
-            }
-        }
+        boolean sendMessage = reduceMessage(backendMsg);
 
         if (sendMessage) {
             if (!msg.send(sockets.get(FRONTEND_INDEX))) {
@@ -199,5 +179,41 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     protected void processZMQControlCommandOtherThanKill(ZMQControlUtility.ZMQControlCommand zmqControlCommand,
                                                          ZMsg msg) {
         // no other commands are of interest
+    }
+
+    private void addBroker(ZMsg msg, String brokerServer) {
+        planManager.addServer(brokerServer);
+
+        ZMsg reply = PayloadKt.payloadToZMsg(new Payload.PINGRESPPayload(ReasonCode.Success), kryo, brokerServer);
+        reply.send(sockets.get(BACKEND_INDEX));
+        msg.destroy();
+        return;
+    }
+
+    private boolean reduceMessage(ZMsg backendMsg) {
+        boolean sendMessage = true;
+
+        Pair<String, Payload> pair = PayloadKt.transformZMsgWithId(backendMsg, kryo);
+        if (pair != null) {
+            Payload payload = pair.getSecond();
+            if (payload instanceof Payload.CONNACKPayload) {
+                sendMessage = clientManager.isConAckRequired(pair.getFirst());
+                if (sendMessage) {
+                    clientManager.setIsConAckRequired(pair.getFirst(), false);
+                }
+            } else if (payload instanceof Payload.PINGRESPPayload) {
+                sendMessage = clientManager.isPingRespRequired(pair.getFirst());
+                if (sendMessage) {
+                    clientManager.incrementPingResp(pair.getFirst());
+                }
+            } else if (payload instanceof Payload.DISCONNECTPayload) {
+                sendMessage = clientManager.clientExists(pair.getFirst());
+                if (sendMessage) {
+                    clientManager.removeClient(pair.getFirst());
+                }
+            }
+        }
+
+        return sendMessage;
     }
 }

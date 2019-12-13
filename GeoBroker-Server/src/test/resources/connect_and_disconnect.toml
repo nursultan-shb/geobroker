@@ -4,6 +4,8 @@ brokerId = "broker"
 port = 5559
 granularity = 5
 messageProcessors = 1
+planCreatorAddress = "tcp://127.0.0.1:7001"
+loadBalancerAddress = "tcp://127.0.0.1:5559"
 
     # server mode specific information (only one should be uncommented)
 #    [server.mode]

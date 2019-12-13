@@ -40,5 +40,7 @@ public class Agent implements ZThread.IAttachedRunnable {
                 lastPlanCreatorPingTime = System.currentTimeMillis();
             }
         }
+
+        messageProcessor.destroy();
     }
 }

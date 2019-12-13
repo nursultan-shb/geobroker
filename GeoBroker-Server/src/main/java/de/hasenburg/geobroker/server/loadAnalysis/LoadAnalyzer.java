@@ -73,4 +73,11 @@ public class LoadAnalyzer {
         msg.push(ZMsgType.PINGREQ.toString());
         msg.send(pipe);
     }
+
+    protected void destroy() {
+        this.dealer.setLinger(1);
+        this.dealer.close();
+        this.pipe.setLinger(1);
+        this.pipe.close();
+    }
 }

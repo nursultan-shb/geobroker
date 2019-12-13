@@ -9,7 +9,7 @@ public class ClientManager {
     private Logger logger;
     private Map<String, ClientState> clients = new HashMap<>();
 
-    public ClientManager (Logger logger) {
+    public ClientManager(Logger logger) {
         this.logger = logger;
     }
 
@@ -18,28 +18,46 @@ public class ClientManager {
     }
 
     public void removeClient(String clientId) {
-        clients.remove(clientId);
+        if (clients.get(clientId) != null) {
+            clients.remove(clientId);
+        }
+    }
+
+    public boolean clientExists(String clientId) {
+        return clients.get(clientId) != null;
     }
 
     public void setIsConAckRequired(String clientId, boolean isConAckRequired) {
         ClientState clientState = clients.get(clientId);
-        clientState.setConnAckRequired(isConAckRequired);
-        clients.put(clientId, clientState);
+        if (clientState != null) {
+            clientState.setConnAckRequired(isConAckRequired);
+            clients.put(clientId, clientState);
+        }
     }
 
     public boolean isConAckRequired(String clientId) {
         ClientState clientState = clients.get(clientId);
-        return clientState.isConnAckRequired();
+        return clientState == null ? true : clientState.isConnAckRequired();
     }
 
     public boolean isPingRespRequired(String clientId) {
         ClientState clientState = clients.get(clientId);
-        return clientState.isPingRespRequired();
+        return clientState == null ? true : clientState.isPingRespRequired();
     }
 
-    public void isSetPingRespRequired(String clientId, boolean isRequired) {
+    public void incrementPingReq(String clientId) {
         ClientState clientState = clients.get(clientId);
-        clientState.setPingRespRequired(isRequired);
-        clients.put(clientId, clientState);
+        if (clientState != null) {
+            clientState.incrementPingReq();
+            clients.put(clientId, clientState);
+        }
+    }
+
+    public void incrementPingResp(String clientId) {
+        ClientState clientState = clients.get(clientId);
+        if (clientState != null) {
+            clientState.incrementPingResp();
+            clients.put(clientId, clientState);
+        }
     }
 }
