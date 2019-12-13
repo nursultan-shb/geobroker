@@ -40,16 +40,19 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
     private String loadBalancerAddress = "";
     private String planCreatorAddress = "";
     private String brokerIdentity = "";
+    private boolean isAwsCpuUtilization = false;
 
     /**
      * @param brokerId - should be the broker id this server is running on
      */
-    ZMQProcess_WorkerServer(String ip, int port, String brokerId, String loadBalancerAddress, String planCreatorAddress) {
+    ZMQProcess_WorkerServer(String ip, int port, String brokerId, String loadBalancerAddress,
+                            String planCreatorAddress, boolean isAwsCpuUtilization) {
         super(getServerIdentity(brokerId));
         this.ip = "127.0.0.1";
         this.port = port;
         this.loadBalancerAddress = loadBalancerAddress;
         this.planCreatorAddress = planCreatorAddress;
+        this.isAwsCpuUtilization = isAwsCpuUtilization;
     }
 
     public static String getServerIdentity(String brokerId) {

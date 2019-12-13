@@ -37,6 +37,7 @@ public class Configuration {
 
 	private String loadBalancerAddress = "tcp://127.0.0.1:5559";
 	private String planCreatorAddress = "tcp://127.0.0.1:7001";
+	private boolean isAwsCpuUtilization = false;
 
 	// disgb specific
 	private String brokerAreaFilePath = "defaultBrokerAreas.json";
@@ -112,6 +113,7 @@ public class Configuration {
 
 		c.loadBalancerAddress = toml_server.getString("loadBalancerAddress", c.loadBalancerAddress);
 		c.planCreatorAddress = toml_server.getString("planCreatorAddress", c.planCreatorAddress);
+		c.isAwsCpuUtilization = toml_server.getBoolean("isAwsCpuUtilization", c.isAwsCpuUtilization);
 
 		// server mode specific information
 		Toml toml_server_mode = toml_server.getTable("mode");
@@ -195,6 +197,10 @@ public class Configuration {
 	 */
 	public Integer getBrokerCommunicators() {
 		return brokerCommunicators;
+	}
+
+	public boolean isAwsCpuUtilization() {
+		return isAwsCpuUtilization;
 	}
 
 	/**

@@ -42,7 +42,8 @@ public class SingleGeoBrokerServerLogic implements IServerLogic {
 				configuration.getPort(),
 				configuration.getBrokerId(),
 				configuration.getLoadBalancerAddress(),
-				configuration.getPlanCreatorAddress());
+				configuration.getPlanCreatorAddress(),
+				configuration.isAwsCpuUtilization());
 		for (int number = 1; number <= configuration.getMessageProcessors(); number++) {
 			ZMQProcessStarter.runZMQProcess_MessageProcessor(processManager,
 					configuration.getBrokerId(),
