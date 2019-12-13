@@ -1,30 +1,28 @@
 package de.hasenburg.geobroker.server.scenarios
 
 import de.hasenburg.geobroker.client.main.SimpleClient
-import de.hasenburg.geobroker.commons.*
 import de.hasenburg.geobroker.commons.communication.ZMQProcessManager
+import de.hasenburg.geobroker.commons.model.BrokerArea
+import de.hasenburg.geobroker.commons.model.message.Payload.*
 import de.hasenburg.geobroker.commons.model.message.ReasonCode
 import de.hasenburg.geobroker.commons.model.spatial.Geofence
 import de.hasenburg.geobroker.commons.model.spatial.Location
-import de.hasenburg.geobroker.commons.model.BrokerArea
+import de.hasenburg.geobroker.commons.sleepNoLog
 import de.hasenburg.geobroker.server.main.Configuration
 import de.hasenburg.geobroker.server.main.server.DisGBSubscriberMatchingServerLogic
 import org.apache.logging.log4j.LogManager
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-
-import java.util.ArrayList
-import java.util.Random
-
-import de.hasenburg.geobroker.commons.model.message.Payload.*
-import org.junit.Assert.*
+import java.util.*
 
 class ConnectAndDisconnectTest {
 
     private val logger = LogManager.getLogger()
     private lateinit var serverLogic: DisGBSubscriberMatchingServerLogic
     private lateinit var clientProcessManager: ZMQProcessManager
+    private val receiveTimeout = 1000
 
     @Before
     fun setUp() {
@@ -54,7 +52,7 @@ class ConnectAndDisconnectTest {
 
         // connect
         client.send(CONNECTPayload(Location.random()))
-        assertTrue(client.receiveWithTimeout(100) is CONNACKPayload)
+        assertTrue(client.receiveWithTimeout(receiveTimeout) is CONNACKPayload)
 
         // check whether client exists
         assertEquals(1, serverLogic.clientDirectory.numberOfClients.toLong())
@@ -90,7 +88,7 @@ class ConnectAndDisconnectTest {
 
         // check acknowledgements
         for (client in clients) {
-            assertTrue(client.receiveWithTimeout(100) is CONNACKPayload)
+            assertTrue(client.receiveWithTimeout(receiveTimeout) is CONNACKPayload)
         }
 
         sleepNoLog(1, 0)
@@ -111,7 +109,7 @@ class ConnectAndDisconnectTest {
 
         // connect
         client.send(CONNECTPayload(Location(30.0, 30.0)))
-        val payload = client.receiveWithTimeout(100)
+        val payload = client.receiveWithTimeout(receiveTimeout)
         logger.info("Client received response {}", payload)
         if (payload is DISCONNECTPayload) {
             assertEquals(ReasonCode.WrongBroker, payload.reasonCode)

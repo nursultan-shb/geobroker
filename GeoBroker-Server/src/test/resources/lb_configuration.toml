@@ -1,0 +1,5 @@
+[server]
+serverId = "loadbalancer"
+frontendPort = 7225
+backendPort = 5559
+address = "tcp://127.0.0.1"

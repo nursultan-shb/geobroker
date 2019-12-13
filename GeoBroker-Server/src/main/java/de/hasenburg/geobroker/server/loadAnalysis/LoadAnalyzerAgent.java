@@ -23,14 +23,14 @@ public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
 
         while (!Thread.currentThread().isInterrupted()) {
 
-            if (System.currentTimeMillis() - lastUtilizationRequestTime > 10*1000 ){
-                lastUtilizationRequestTime = System.currentTimeMillis();
-                loadAnalyzer.requestUtilization();
-            }
-
             if (System.currentTimeMillis() - lastLoadBalancerPingTime > 10*1000 ){
                 lastLoadBalancerPingTime = System.currentTimeMillis();
                 loadAnalyzer.sendPing();
+            }
+
+            if (System.currentTimeMillis() - lastUtilizationRequestTime > 10*1000 ){
+                lastUtilizationRequestTime = System.currentTimeMillis();
+                loadAnalyzer.requestUtilization();
             }
 
             int rc = poller.poll(1000);
@@ -43,5 +43,7 @@ public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
             if (poller.pollin(1))
                 loadAnalyzer.handleDealerMessage();
         }
+
+     loadAnalyzer.destroy();
     }
 }

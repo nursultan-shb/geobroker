@@ -37,10 +37,12 @@ public class SingleGeoBrokerServerLogic implements IServerLogic {
 
 	@Override
 	public void startServer() {
-		ZMQProcessStarter.runZMQProcess_Server(processManager,
+		ZMQProcessStarter.runZMQProcess_WorkerServer(processManager,
 				"0.0.0.0",
 				configuration.getPort(),
-				configuration.getBrokerId());
+				configuration.getBrokerId(),
+				configuration.getLoadBalancerAddress(),
+				configuration.getPlanCreatorAddress());
 		for (int number = 1; number <= configuration.getMessageProcessors(); number++) {
 			ZMQProcessStarter.runZMQProcess_MessageProcessor(processManager,
 					configuration.getBrokerId(),

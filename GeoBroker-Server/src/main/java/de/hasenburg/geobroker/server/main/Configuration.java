@@ -35,6 +35,9 @@ public class Configuration {
 	private Mode mode = Mode.single;
 	private OtherMode otherMode = null;
 
+	private String loadBalancerAddress = "tcp://127.0.0.1:5559";
+	private String planCreatorAddress = "tcp://127.0.0.1:7001";
+
 	// disgb specific
 	private String brokerAreaFilePath = "defaultBrokerAreas.json";
 	private Integer brokerCommunicators = 1;
@@ -107,6 +110,9 @@ public class Configuration {
 				c.messageProcessors.longValue()));
 		c.logConfFile = toml_server.getString("logConfFile", c.logConfFile);
 
+		c.loadBalancerAddress = toml_server.getString("loadBalancerAddress", c.loadBalancerAddress);
+		c.planCreatorAddress = toml_server.getString("planCreatorAddress", c.planCreatorAddress);
+
 		// server mode specific information
 		Toml toml_server_mode = toml_server.getTable("mode");
 		if (toml_server_mode != null) {
@@ -167,6 +173,14 @@ public class Configuration {
 
 	public Mode getMode() {
 		return mode;
+	}
+
+	public String getLoadBalancerAddress() {
+		return loadBalancerAddress;
+	}
+
+	public String getPlanCreatorAddress() {
+		return planCreatorAddress;
 	}
 
 	/**

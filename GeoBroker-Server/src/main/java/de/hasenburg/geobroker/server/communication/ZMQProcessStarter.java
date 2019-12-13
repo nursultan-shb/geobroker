@@ -14,8 +14,15 @@ public class ZMQProcessStarter {
 	private static final Logger logger = LogManager.getLogger();
 
 	public static ZMQProcess_Server runZMQProcess_Server(ZMQProcessManager processManager, String ip, int port,
-														 String brokerId) {
+														  String brokerId) {
 		ZMQProcess_Server zmqProcess = new ZMQProcess_Server(ip, port, brokerId);
+		processManager.submitZMQProcess(ZMQProcess_Server.getServerIdentity(brokerId), zmqProcess);
+		return zmqProcess;
+	}
+
+	public static ZMQProcess_WorkerServer runZMQProcess_WorkerServer(ZMQProcessManager processManager, String ip, int port,
+														 String brokerId, String loadBalancerAddress, String planCreatorAddress) {
+		ZMQProcess_WorkerServer zmqProcess = new ZMQProcess_WorkerServer(ip, port, brokerId, loadBalancerAddress, planCreatorAddress);
 		processManager.submitZMQProcess(ZMQProcess_Server.getServerIdentity(brokerId), zmqProcess);
 		return zmqProcess;
 	}

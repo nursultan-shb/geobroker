@@ -19,7 +19,6 @@ import org.apache.logging.log4j.LogManager
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
-import org.junit.Test
 
 private var logger = LogManager.getLogger()
 
@@ -67,7 +66,7 @@ class DisGBScenarioRuns {
         logger.info("Client teardown completed")
     }
 
-    @Test
+    //@Test
     fun validateVariables() {
         // broker areas
         assertFalse(parisArea.intersects(berlinArea))
@@ -117,7 +116,7 @@ class DisGBScenarioRuns {
         assertTrue(mg3.contains(cl3))
     }
 
-    @Test
+    //@Test
     fun subscriberMatchingScenario() {
         val paris = DisGBSubscriberMatchingServerLogic()
         val berlin = DisGBSubscriberMatchingServerLogic()
@@ -205,7 +204,7 @@ class DisGBScenarioRuns {
         assertEquals(0, berlinCD.numberOfClients)
     }
 
-    @Test
+    //@Test
     fun publisherMatchingScenario() {
         val paris = DisGBPublisherMatchingServerLogic()
         val berlin = DisGBPublisherMatchingServerLogic()
