@@ -5,11 +5,8 @@ import de.hasenburg.geobroker.commons.Utility;
 import de.hasenburg.geobroker.commons.communication.ZMQProcessManager;
 import kg.shabykeev.loadbalancer.commons.server.Configuration;
 import kg.shabykeev.loadbalancer.commons.server.IServerLogic;
-import kg.shabykeev.loadbalancer.commons.server.Configuration;
-import kg.shabykeev.loadbalancer.commons.server.IServerLogic;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,8 +33,8 @@ public class LoadBalancerLogic implements IServerLogic {
                 config.getFrontendPort(), config.getBackendPort(), config.getPlanCreatorAddress());
         processManager.submitZMQProcess(config.getServerId(), zmqProcess);
 
-        logger.info(String.format("Started a load balancer successfully on a frontend port: %d and a backend port: %d",
-                config.getFrontendPort(), config.getBackendPort()));
+        logger.info(String.format("Started a load balancer successfully on a frontend port: %d and a backend port: %d. PlanCreator's address: %s",
+                config.getFrontendPort(), config.getBackendPort(), config.getPlanCreatorAddress()));
     }
 
     @Override

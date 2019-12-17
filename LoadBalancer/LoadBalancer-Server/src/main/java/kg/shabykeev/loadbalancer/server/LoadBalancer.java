@@ -10,16 +10,21 @@ public class LoadBalancer {
 
     private static final Logger logger = LogManager.getLogger();
 
-    public LoadBalancer(){
+    public LoadBalancer() {
 
     }
 
-    public static void main (String[] args){
+    public static void main(String[] args) {
+        Configuration configuration;
+
+        if (args.length > 0) {
+            configuration = Configuration.readConfiguration(args[0]);
+        } else {
+            configuration = Configuration.readInternalConfiguration("configuration.toml");
+        }
 
         IServerLogic logic = new LoadBalancerLogic();
-        Configuration config = Configuration.readConfiguration("configuration.toml");
-
         ServerLifeCycle lifecycle = new ServerLifeCycle(logic);
-        lifecycle.run(config);
+        lifecycle.run(configuration);
     }
 }

@@ -21,7 +21,6 @@ public class PlanServerLogic implements IServerLogic {
 
     @Override
     public void initializeFields() {
-
         processManager = new ZMQProcessManager();
     }
 
@@ -29,7 +28,7 @@ public class PlanServerLogic implements IServerLogic {
     public void startServer(){
         ZMQProcess_PlanServer zmqProcess = new ZMQProcess_PlanServer(config.getAddress(),
                 config.getFrontendPort(), config.getBackendPort(), config.getServerId(), config.getPlanGenerationDelay());
-        processManager.submitZMQProcess(config.getServerId(), zmqProcess);     ;
+        processManager.submitZMQProcess(config.getServerId(), zmqProcess);
 
         logger.info(String.format("Started a plan creator server successfully on a frontend port: %d and a backend port: %d",
                 config.getFrontendPort(), config.getBackendPort()));

@@ -53,6 +53,9 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
         this.loadBalancerAddress = loadBalancerAddress;
         this.planCreatorAddress = planCreatorAddress;
         this.isAwsCpuUtilization = isAwsCpuUtilization;
+        logger.info("PlanCreator's address: {}", planCreatorAddress);
+        logger.info("LoadBalancer's address: {}", loadBalancerAddress);
+        logger.info("isAwsCpuUtilization: {}", isAwsCpuUtilization);
     }
 
     public static String getServerIdentity(String brokerId) {

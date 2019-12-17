@@ -16,6 +16,7 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import kg.shabykeev.loadbalancer.commons.server.Configuration as LbConfiguration
 
 class PublishSubscribeTest {
 
@@ -36,7 +37,7 @@ class PublishSubscribeTest {
         serverLogic.startServer()
 
         loadBalancerLogic = LoadBalancerLogic()
-        loadBalancerLogic.loadConfiguration(kg.shabykeev.loadbalancer.commons.server.Configuration.readConfiguration("lb_configuration.toml"))
+        loadBalancerLogic.loadConfiguration(LbConfiguration.readInternalConfiguration("lb_configuration.toml"))
         loadBalancerLogic.initializeFields()
         loadBalancerLogic.startServer()
 

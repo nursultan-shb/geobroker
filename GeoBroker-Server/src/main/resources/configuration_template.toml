@@ -4,8 +4,8 @@ brokerId = "broker"
 port = 5559
 granularity = 5
 messageProcessors = 2
-planCreatorAddress = 54.82.181.246:7001
-loadBalancerAddress = 54.243.10.234:5559
+planCreatorAddress = "tcp://54.82.181.246:7001"
+loadBalancerAddress = "tcp://54.243.10.234:5559"
 isAwsCpuUtilization = false
 # logConfFile = "./test-log.xml" # specify another config file to be used
 

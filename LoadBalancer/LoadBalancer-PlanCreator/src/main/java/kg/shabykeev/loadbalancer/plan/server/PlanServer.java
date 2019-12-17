@@ -11,15 +11,21 @@ import org.apache.logging.log4j.Logger;
 public class PlanServer {
     private static final Logger logger = LogManager.getLogger();
 
-    public PlanServer(){
+    public PlanServer() {
 
     }
 
-    public static void main (String[] args){
-        IServerLogic logic = new PlanServerLogic();
-        Configuration config = Configuration.readConfiguration("configuration.toml");
+    public static void main(String[] args) {
+        Configuration configuration;
 
+        if (args.length > 0) {
+            configuration = Configuration.readConfiguration(args[0]);
+        } else {
+            configuration = Configuration.readInternalConfiguration("configuration.toml");
+        }
+
+        IServerLogic logic = new PlanServerLogic();
         ServerLifeCycle lifecycle = new ServerLifeCycle(logic);
-        lifecycle.run(config);
+        lifecycle.run(configuration);
     }
 }

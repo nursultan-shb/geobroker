@@ -4,6 +4,7 @@ import com.moandjiezana.toml.Toml;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.InputStream;
 
 public class Configuration {
@@ -18,7 +19,7 @@ public class Configuration {
         return planCreatorAddress;
     }
 
-    private String planCreatorAddress;
+    private String planCreatorAddress = "";
 
     public Integer getPlanGenerationDelay() {
         return planGenerationDelay;
@@ -46,13 +47,27 @@ public class Configuration {
         return address;
     }
 
-    public static Configuration readConfiguration(String fileName) {
+    public static Configuration readInternalConfiguration(String fileName) {
         try {
             Configuration c = new Configuration();
             ClassLoader classloader = Thread.currentThread().getContextClassLoader();
             InputStream is = classloader.getResourceAsStream(fileName);
 
-            Toml toml = new Toml().read (is);
+            Toml toml = new Toml().read(is);
+
+            return parseToml(c, toml);
+        } catch (Exception e) {
+            logger.fatal("Could not read configuration", e);
+        }
+        System.exit(1);
+        return null; // WHY DO I NEED YOU?
+    }
+
+    public static Configuration readConfiguration(String fileName) {
+        try {
+            Configuration c = new Configuration();
+            File f = new File(fileName);
+            Toml toml = new Toml().read(f);
 
             return parseToml(c, toml);
         } catch (Exception e) {

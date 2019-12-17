@@ -34,7 +34,7 @@ class PingTest {
         serverLogic.startServer()
 
         loadBalancerLogic = LoadBalancerLogic()
-        loadBalancerLogic.loadConfiguration(LbConfiguration.readConfiguration("lb_configuration.toml"))
+        loadBalancerLogic.loadConfiguration(LbConfiguration.readInternalConfiguration("lb_configuration.toml"))
         loadBalancerLogic.initializeFields()
         loadBalancerLogic.startServer()
 
