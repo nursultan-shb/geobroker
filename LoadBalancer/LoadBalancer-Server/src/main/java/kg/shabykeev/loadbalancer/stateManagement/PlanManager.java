@@ -38,6 +38,9 @@ public class PlanManager {
         if (!brokers.containsValue(server)) {
             brokers.put(nextServerId, server);
             nextServerId++;
+
+            logger.info("New broker is connected: {}", server);
+            logger.info("Total number of brokers: {}", nextServerId);
         }
     }
 

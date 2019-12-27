@@ -35,8 +35,8 @@ public class Configuration {
 	private Mode mode = Mode.single;
 	private OtherMode otherMode = null;
 
-	private String loadBalancerAddress = "tcp://127.0.0.1:5559";
-	private String planCreatorAddress = "tcp://127.0.0.1:7001";
+	private String loadBalancerAddress = "tcp://0.0.0.0:5559";
+	private String planCreatorAddress = "tcp://0.0.0.0:7001";
 	private boolean isAwsCpuUtilization = false;
 
 	// disgb specific

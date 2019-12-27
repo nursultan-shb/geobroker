@@ -48,8 +48,10 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     @Override
     protected List<ZMQ.Socket> bindAndConnectSockets(ZContext context) {
         ZMQ.Socket[] socketArray = new ZMQ.Socket[3];
-        String frontendAddress = ip + ":" + frontend_port;
-        String backendAddress = ip + ":" + backend_port;
+        String frontendAddress = "tcp://0.0.0.0" + ":" + frontend_port;
+        String backendAddress = "tcp://0.0.0.0" + ":" + backend_port;
+        String backendIdentity = ip + ":" + backend_port;
+        logger.info("Frontend listens: {} Backend listens: {}  Backend Id: {}", frontendAddress, backendAddress, backendIdentity);
 
         ZMQ.Socket frontend = context.createSocket(SocketType.ROUTER);
         frontend.setHWM(10000);
@@ -60,7 +62,7 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
 
         ZMQ.Socket backend = context.createSocket(SocketType.ROUTER);
         backend.setHWM(10000);
-        backend.setIdentity(backendAddress.getBytes(ZMQ.CHARSET));
+        backend.setIdentity(backendIdentity.getBytes(ZMQ.CHARSET));
         backend.bind(backendAddress);
         backend.setSendTimeOut(1);
         socketArray[BACKEND_INDEX] = backend;

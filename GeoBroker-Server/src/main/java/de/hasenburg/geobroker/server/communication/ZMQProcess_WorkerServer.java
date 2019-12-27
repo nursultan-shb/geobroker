@@ -35,7 +35,6 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
     private final int PIPE_INDEX = 2;
 
     private double cpuUtilization = 0d;
-    private String frontendAddress = "";
 
     private String loadBalancerAddress = "";
     private String planCreatorAddress = "";
@@ -68,11 +67,10 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
 
         Socket frontend = context.createSocket(SocketType.ROUTER);
         frontend.setHWM(10000);
-        frontendAddress = "tcp://" + ip + ":" + port;
 
         this.brokerIdentity = ZHelper.setId(identity, frontend);
         frontend.setIdentity(this.brokerIdentity.getBytes(ZMQ.CHARSET));
-        frontend.connect(frontendAddress);
+        frontend.connect(loadBalancerAddress);
         frontend.setSendTimeOut(1);
         socketArray[FRONTEND_INDEX] = frontend;
         logger.info("GeoBroker identity: {}", this.brokerIdentity);
@@ -131,7 +129,7 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
                 msg.send(sockets.get(PIPE_INDEX));
             }
             else {
-                msg.push(frontendAddress);
+                msg.push(loadBalancerAddress);
                 if (!msg.send(sockets.get(FRONTEND_INDEX))) {
                     logger.warn("Dropping response to client as HWM reached.");
                 }
