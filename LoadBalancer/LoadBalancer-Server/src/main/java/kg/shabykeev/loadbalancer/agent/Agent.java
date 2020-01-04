@@ -35,7 +35,7 @@ public class Agent implements ZThread.IAttachedRunnable {
                 messageProcessor.handleDealerMessage();
             }
 
-            if (System.currentTimeMillis() - lastPlanCreatorPingTime >= 15000) {
+            if (System.currentTimeMillis() - lastPlanCreatorPingTime >= 30000) {
                 messageProcessor.ping();
                 lastPlanCreatorPingTime = System.currentTimeMillis();
             }

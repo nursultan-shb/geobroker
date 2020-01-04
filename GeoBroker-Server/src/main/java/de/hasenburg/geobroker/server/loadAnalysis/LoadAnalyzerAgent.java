@@ -23,12 +23,12 @@ public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
 
         while (!Thread.currentThread().isInterrupted()) {
 
-            if (System.currentTimeMillis() - lastLoadBalancerPingTime > 10*1000 ){
+            if (System.currentTimeMillis() - lastLoadBalancerPingTime > 30*1000 ){
                 lastLoadBalancerPingTime = System.currentTimeMillis();
                 loadAnalyzer.sendPing();
             }
 
-            if (System.currentTimeMillis() - lastUtilizationRequestTime > 10*1000 ){
+            if (System.currentTimeMillis() - lastUtilizationRequestTime > 30*1000 ){
                 lastUtilizationRequestTime = System.currentTimeMillis();
                 loadAnalyzer.requestUtilization();
             }
