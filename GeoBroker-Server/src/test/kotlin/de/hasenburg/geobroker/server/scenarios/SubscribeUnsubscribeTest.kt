@@ -31,15 +31,15 @@ class SubscribeUnsubscribeTest {
     fun setUp() {
         logger.info("Running test setUp")
 
-        serverLogic = SingleGeoBrokerServerLogic()
-        serverLogic.loadConfiguration(Configuration())
-        serverLogic.initializeFields()
-        serverLogic.startServer()
-
         loadBalancerLogic = LoadBalancerLogic()
         loadBalancerLogic.loadConfiguration(LbConfiguration.readInternalConfiguration("lb_configuration.toml"))
         loadBalancerLogic.initializeFields()
         loadBalancerLogic.startServer()
+
+        serverLogic = SingleGeoBrokerServerLogic()
+        serverLogic.loadConfiguration(Configuration())
+        serverLogic.initializeFields()
+        serverLogic.startServer()
 
         clientProcessManager = ZMQProcessManager()
 
