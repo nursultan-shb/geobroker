@@ -5,7 +5,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZThread;
 
 public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
-    private Long lastUtilizationRequestTime = 0L; //seconds
+    private Long lastUtilizationRequestTime = System.currentTimeMillis();
     private Long lastLoadBalancerPingTime = 0L;
 
     @Override
