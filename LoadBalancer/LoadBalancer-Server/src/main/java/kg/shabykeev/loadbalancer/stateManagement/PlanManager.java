@@ -10,6 +10,7 @@ public class PlanManager {
     private Logger logger;
     private HashMap<Integer, String> brokers = new HashMap<>();
     private HashMap<String, String> planMap = new HashMap<>();
+    private List<String> brokersList = new ArrayList<>();
 
     private int nextRoundRobinServerId = 0;
     private int nextServerId = 0;
@@ -37,6 +38,7 @@ public class PlanManager {
     public void addServer(String server) {
         if (!brokers.containsValue(server)) {
             brokers.put(nextServerId, server);
+            brokersList.add(server);
             nextServerId++;
 
             logger.info("New broker is connected: {}", server);
@@ -45,7 +47,7 @@ public class PlanManager {
     }
 
     public List<String> getBrokers() {
-        return new ArrayList<>(brokers.values());
+        return brokersList;
     }
 
     public void addPlan(String topic, String server) {

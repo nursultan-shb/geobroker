@@ -60,4 +60,8 @@ public class ClientManager {
             clients.put(clientId, clientState);
         }
     }
+
+    public int getClientsCount() {
+        return this.clients.size();
+    }
 }

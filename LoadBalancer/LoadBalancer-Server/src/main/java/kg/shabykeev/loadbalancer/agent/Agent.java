@@ -13,6 +13,7 @@ public class Agent implements ZThread.IAttachedRunnable {
     private final int PIPE_INDEX = 0;
     private final int DEALER_INDEX = 1;
     private Long lastPlanCreatorPingTime = 0L;
+    private Long lastStatisticsPrintTime = System.currentTimeMillis();
 
     @Override
     public void run(Object[] args, ZContext context, ZMQ.Socket pipe) {
@@ -38,6 +39,11 @@ public class Agent implements ZThread.IAttachedRunnable {
             if (System.currentTimeMillis() - lastPlanCreatorPingTime >= 30000) {
                 messageProcessor.ping();
                 lastPlanCreatorPingTime = System.currentTimeMillis();
+            }
+
+            if (System.currentTimeMillis() - lastStatisticsPrintTime >= 5*60*1000) {
+                messageProcessor.printStatistics();
+                lastStatisticsPrintTime = System.currentTimeMillis();
             }
         }
 

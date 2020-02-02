@@ -5,6 +5,7 @@ import de.hasenburg.geobroker.commons.model.message.Payload;
 import de.hasenburg.geobroker.commons.model.message.PayloadKt;
 import de.hasenburg.geobroker.commons.model.spatial.Location;
 import de.hasenburg.geobroker.commons.util.ZHelper;
+import kg.shabykeev.loadbalancer.commons.ZMsgType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.zeromq.SocketType;
@@ -55,6 +56,12 @@ public class MessageProcessor {
         Payload.PINGREQPayload payload = new Payload.PINGREQPayload(Location.random());
         ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);
         msg.send(dealer);
+    }
+
+    public void printStatistics() {
+        ZMsg msg = new ZMsg();
+        msg.push(ZMsgType.PRINT_STATISTICS.toString());
+        msg.send(pipe);
     }
 
     protected void destroy() {

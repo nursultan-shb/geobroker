@@ -6,5 +6,6 @@ public enum ZMsgType {
     PINGRESP,
     PLAN_CREATOR_MESSAGE,
     MIGRATION_TASK,
-    PLAN
+    PLAN,
+    PRINT_STATISTICS
 }

@@ -27,6 +27,11 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     private PlanManager planManager = new PlanManager(logger);
     private ClientManager clientManager = new ClientManager(logger);
 
+    private int connMessages = 0;
+    private int pubIncomingMessages = 0;
+    private int pubOutgoingMessages = 0;
+    private int disconnectMessages = 0;
+
     // Address and port of server frontend
     private String ip;
     private int frontend_port;
@@ -54,17 +59,19 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
         logger.info("Frontend listens: {} Backend listens: {}  Backend Id: {}", frontendAddress, backendAddress, backendIdentity);
 
         ZMQ.Socket frontend = context.createSocket(SocketType.ROUTER);
-        frontend.setHWM(10000);
+        frontend.setHWM(10000000);
+        frontend.setBacklog(3240000);
         frontend.setIdentity(frontendAddress.getBytes(ZMQ.CHARSET));
         frontend.bind(frontendAddress);
-        frontend.setSendTimeOut(1);
+        frontend.setSendTimeOut(100);
         socketArray[FRONTEND_INDEX] = frontend;
 
         ZMQ.Socket backend = context.createSocket(SocketType.ROUTER);
-        backend.setHWM(10000);
+        backend.setHWM(10000000);
+        frontend.setBacklog(3240000);
         backend.setIdentity(backendIdentity.getBytes(ZMQ.CHARSET));
         backend.bind(backendAddress);
-        backend.setSendTimeOut(1);
+        backend.setSendTimeOut(100);
         socketArray[BACKEND_INDEX] = backend;
 
         Agent agent = new Agent();
@@ -102,6 +109,7 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
                 msg.push(planManager.getServer(subTopic));
                 msg.send(sockets.get(BACKEND_INDEX));
             } else if (payload instanceof Payload.PUBLISHPayload) {
+                pubIncomingMessages++;
                 String pubTopic = ((Payload.PUBLISHPayload) payload).getTopic().getTopic();
                 msg.push(planManager.getServer(pubTopic));
                 msg.send(sockets.get(BACKEND_INDEX));
@@ -110,12 +118,14 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
                 msg.push(planManager.getServer(topic));
                 msg.send(sockets.get(BACKEND_INDEX));
             } else if (payload instanceof Payload.CONNECTPayload) {
+                connMessages++;
                 clientManager.addClient(pair.getFirst());
                 sendToBrokers(msg);
             } else if (payload instanceof Payload.PINGREQPayload) {
                 clientManager.incrementPingReq(pair.getFirst());
                 sendToBrokers(msg);
             } else if (payload instanceof Payload.DISCONNECTPayload) {
+                disconnectMessages++;
                 sendToBrokers(msg);
             }
         }
@@ -142,7 +152,12 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
     }
 
     private void handlePipeMessage(ZMsg msg) {
-        updatePlan(msg);
+        if (msg.getFirst().toString().equals(ZMsgType.PRINT_STATISTICS.toString())) {
+            printStatistics();
+            msg.destroy();
+        } else {
+            updatePlan(msg);
+        }
     }
 
     private void updatePlan(ZMsg msg) {
@@ -213,9 +228,19 @@ public class ZMQProcess_LoadBalancer extends ZMQProcess {
                 if (sendMessage) {
                     clientManager.removeClient(pair.getFirst());
                 }
+            } else if (payload instanceof Payload.PUBLISHPayload) {
+                pubOutgoingMessages++;
             }
         }
 
         return sendMessage;
+    }
+
+    private void printStatistics() {
+        logger.info("Clients number: {}", clientManager.getClientsCount());
+        logger.info("Connect messages count: {}", connMessages);
+        logger.info("Incoming pub messages count: {}", pubIncomingMessages);
+        logger.info("Outgoing pub messages count: {}", pubOutgoingMessages);
+        logger.info("Disconnect messages count: {}", disconnectMessages);
     }
 }
