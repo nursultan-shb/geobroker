@@ -22,7 +22,7 @@ class ConnectAndDisconnectTest {
     private val logger = LogManager.getLogger()
     private lateinit var serverLogic: DisGBSubscriberMatchingServerLogic
     private lateinit var clientProcessManager: ZMQProcessManager
-    private val receiveTimeout = 1000
+    private val receiveTimeout = 2000
 
     @Before
     fun setUp() {
