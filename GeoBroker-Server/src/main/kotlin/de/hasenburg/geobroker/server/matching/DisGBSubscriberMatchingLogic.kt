@@ -151,7 +151,7 @@ class DisGBAtSubscriberMatchingLogic(private val clientDirectory: ClientDirector
         }
 
         // send response to publisher
-        val response = payloadToZMsg(PUBACKPayload(reasonCode), kryo, clientIdentifier)
+        val response = payloadToZMsg(PUBACKPayload(reasonCode, payload.content), kryo, clientIdentifier)
         logger.trace("Sending response with reason code $reasonCode")
         sendResponse(response, clients)
     }
@@ -229,7 +229,7 @@ class DisGBAtSubscriberMatchingLogic(private val clientDirectory: ClientDirector
         // with the response that we have generated anyways (needs to go via the clients socket as response has to
         // go out of the ZMQProcess_Server
         logger.trace("Sending response with reason code $reasonCode")
-        val response = payloadToZMsg(PUBACKPayload(reasonCode), kryo, otherBrokerId)
+        val response = payloadToZMsg(PUBACKPayload(reasonCode, ""), kryo, otherBrokerId)
         sendResponse(response, clients)
     }
 

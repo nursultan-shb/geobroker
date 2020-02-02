@@ -289,7 +289,7 @@ class DisGBAtPublisherMatchingLogic constructor(private val clientDirectory: Cli
 
         // send response to publisher
         logger.trace("Sending response with reason code $reasonCode")
-        val response = payloadToZMsg(PUBACKPayload(reasonCode), kryo, clientIdentifier)
+        val response = payloadToZMsg(PUBACKPayload(reasonCode, payload.content), kryo, clientIdentifier)
         sendResponse(response, clients)
     }
 
@@ -449,7 +449,7 @@ class DisGBAtPublisherMatchingLogic constructor(private val clientDirectory: Cli
             }
         }
 
-        val response = payloadToZMsg(PUBACKPayload(reasonCode), kryo, otherBrokerId)
+        val response = payloadToZMsg(PUBACKPayload(reasonCode, ""), kryo, otherBrokerId)
 
         // acknowledge publish operation to other broker, he does not expect a particular message so we just reply
         // with the response that we have generated anyways (needs to go via the clients socket as response has to

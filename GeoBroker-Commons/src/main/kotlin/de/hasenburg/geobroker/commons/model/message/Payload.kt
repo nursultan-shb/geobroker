@@ -24,7 +24,7 @@ sealed class Payload {
     data class UNSUBSCRIBEPayload(val topic: Topic) : Payload()
     data class UNSUBACKPayload(val reasonCode: ReasonCode) : Payload()
     data class PUBLISHPayload(val topic: Topic, val geofence: Geofence, val content: String) : Payload()
-    data class PUBACKPayload(val reasonCode: ReasonCode) : Payload()
+    data class PUBACKPayload(val reasonCode: ReasonCode, val content: String) : Payload()
     data class BrokerForwardDisconnectPayload(val clientIdentifier: String, val disconnectPayload: DISCONNECTPayload) :
             Payload()
 

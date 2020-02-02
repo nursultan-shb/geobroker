@@ -158,7 +158,7 @@ class SingleNoGeoMatchingLogic(private val clientDirectory: ClientDirectory,
 
         // send response to publisher
         logger.trace("Sending response with reason code $reasonCode")
-        val response = payloadToZMsg(PUBACKPayload(reasonCode), kryo, clientIdentifier)
+        val response = payloadToZMsg(PUBACKPayload(reasonCode, payload.content), kryo, clientIdentifier)
         sendResponse(response, clients)
     }
 

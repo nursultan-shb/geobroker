@@ -111,7 +111,7 @@ class SingleGeoBrokerMatchingLogic(private val clientDirectory: ClientDirectory,
         ResourceMetrics.setPublishedMessages(payload.topic, 1);
 
         // send response to publisher
-        val response = payloadToZMsg(PUBACKPayload(reasonCode), kryo, clientIdentifier)
+        val response = payloadToZMsg(PUBACKPayload(reasonCode, payload.content), kryo, clientIdentifier)
         sendResponse(response, clients)
     }
 
