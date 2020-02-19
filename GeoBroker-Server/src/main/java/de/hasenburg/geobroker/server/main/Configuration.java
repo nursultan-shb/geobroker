@@ -37,7 +37,8 @@ public class Configuration {
 
 	private String loadBalancerAddress = "tcp://0.0.0.0:5559";
 	private String planCreatorAddress = "tcp://0.0.0.0:7001";
-	private boolean isAwsCpuUtilization = false;
+	private String instanceId = "";
+	private boolean isAwsDeployment;
 
 	// disgb specific
 	private String brokerAreaFilePath = "defaultBrokerAreas.json";
@@ -113,7 +114,8 @@ public class Configuration {
 
 		c.loadBalancerAddress = toml_server.getString("loadBalancerAddress", c.loadBalancerAddress);
 		c.planCreatorAddress = toml_server.getString("planCreatorAddress", c.planCreatorAddress);
-		c.isAwsCpuUtilization = toml_server.getBoolean("isAwsCpuUtilization", c.isAwsCpuUtilization);
+		c.instanceId = toml_server.getString("instanceId", c.instanceId);
+		c.isAwsDeployment = toml_server.getBoolean("isAwsDeployment", c.isAwsDeployment);
 
 		// server mode specific information
 		Toml toml_server_mode = toml_server.getTable("mode");
@@ -199,9 +201,14 @@ public class Configuration {
 		return brokerCommunicators;
 	}
 
-	public boolean isAwsCpuUtilization() {
-		return isAwsCpuUtilization;
+	public String getInstanceId() {
+		return instanceId;
 	}
+
+	public Boolean isAwsDeployment() {
+		return isAwsDeployment;
+	}
+
 
 	/**
 	 * This fields only has a meaning when {@link #getMode()} == Mode.other.

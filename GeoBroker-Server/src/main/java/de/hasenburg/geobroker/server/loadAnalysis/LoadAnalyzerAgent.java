@@ -14,8 +14,11 @@ public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
         String planCreatorAddress = args[0].toString();
         String brokerAddress = args[1].toString();
         String loadBalancerAddress = args[2].toString();
+        String instanceId = args[3].toString();
+        boolean isAwsDeployment = Boolean.parseBoolean(args[4].toString());
 
-        LoadAnalyzer loadAnalyzer = new LoadAnalyzer(ctx, pipe, brokerAddress, loadBalancerAddress, planCreatorAddress);
+        LoadAnalyzer loadAnalyzer = new LoadAnalyzer(ctx, pipe, brokerAddress, loadBalancerAddress,
+                planCreatorAddress, instanceId, isAwsDeployment);
 
         ZMQ.Poller poller = ctx.createPoller(2);
         poller.register(loadAnalyzer.pipe, ZMQ.Poller.POLLIN);

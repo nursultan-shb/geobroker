@@ -22,9 +22,9 @@ public class ZMQProcessStarter {
 
 	public static ZMQProcess_WorkerServer runZMQProcess_WorkerServer(ZMQProcessManager processManager, String ip, int port,
 														 String brokerId, String loadBalancerAddress, String planCreatorAddress,
-																	 boolean isAwsCpuUtilization) {
+																	 String instanceId, Boolean isAwsDeployment) {
 		ZMQProcess_WorkerServer zmqProcess = new ZMQProcess_WorkerServer(ip, port, brokerId, loadBalancerAddress,
-				planCreatorAddress, isAwsCpuUtilization);
+				planCreatorAddress, instanceId, isAwsDeployment);
 		processManager.submitZMQProcess(ZMQProcess_Server.getServerIdentity(brokerId), zmqProcess);
 		return zmqProcess;
 	}

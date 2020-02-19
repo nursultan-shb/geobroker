@@ -11,7 +11,12 @@ import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
+import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
+import software.amazon.awssdk.services.cloudwatch.model.*;
 
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.Random;
 
 public class LoadAnalyzer {
@@ -28,11 +33,17 @@ public class LoadAnalyzer {
     private String brokerAddress = "";
     private String loadBalancerAddress = "";
     private String planCreatorAddress = "";
+    private boolean isAwsDeployment;
 
-    protected LoadAnalyzer(ZContext ctx, ZMQ.Socket pipe, String brokerAddress, String loadBalancerAddress, String planCreatorAddress) {
+    private CloudWatchClient cloudWatchClient;
+    private Dimension dimension;
+
+    protected LoadAnalyzer(ZContext ctx, ZMQ.Socket pipe, String brokerAddress,
+                           String loadBalancerAddress, String planCreatorAddress, String instanceId, boolean isAwsDeployment) {
         this.brokerAddress = brokerAddress;
         this.loadBalancerAddress = loadBalancerAddress;
         this.planCreatorAddress = planCreatorAddress;
+        this.isAwsDeployment = isAwsDeployment;
 
         this.ctx = ctx;
         this.pipe = pipe;
@@ -41,6 +52,9 @@ public class LoadAnalyzer {
         dealer.connect(planCreatorAddress);
 
         Thread.currentThread().setName(baseIdentity);
+        this.dimension = Dimension.builder().name("InstanceId").value(instanceId).build();
+        this.cloudWatchClient = CloudWatchClient.builder().build();
+        logger.info("Local Load Analyzer started. IsAwsDeployment: {}. Instance_Id: {}", isAwsDeployment, instanceId);
     }
 
     public void handlePipeMessage() {
@@ -58,6 +72,11 @@ public class LoadAnalyzer {
     public void requestUtilization() {
         ZMsg msgRequest = new ZMsg();
         msgRequest.add(ZMsgType.TOPIC_METRICS.toString());
+        if (isAwsDeployment) {
+            double cpuLoad =  getCpuLoad(1);
+            msgRequest.add(String.valueOf(cpuLoad));
+        }
+
         msgRequest.send(pipe);
     }
 
@@ -79,5 +98,23 @@ public class LoadAnalyzer {
         this.dealer.close();
         this.pipe.setLinger(1);
         this.pipe.close();
+    }
+
+    private double getCpuLoad(int startFromMinutesBack) {
+        GetMetricStatisticsRequest request = GetMetricStatisticsRequest.builder()
+                .metricName("CPUUtilization").namespace("AWS/EC2").period(60)
+                .statistics(Statistic.MAXIMUM)
+                .startTime(Instant.ofEpochMilli((new Date(new Date().getTime() - startFromMinutesBack*60*1000)).getTime()))
+                .endTime(Instant.ofEpochMilli((new Date()).getTime()))
+                .unit(StandardUnit.PERCENT)
+                .dimensions(dimension)
+                .build();
+
+        GetMetricStatisticsResponse response = cloudWatchClient.getMetricStatistics(request);
+        Datapoint datapoint = response.datapoints().stream().max(Comparator.comparing(Datapoint::maximum)).orElse(null);
+
+        double cpuLoad = datapoint == null ? 0 : datapoint.maximum();
+        logger.info("CPU Load: {}", cpuLoad);
+        return cpuLoad;
     }
 }

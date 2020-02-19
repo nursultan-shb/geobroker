@@ -31,7 +31,6 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
     // socket indices
     private final int FRONTEND_INDEX = 0;
     private final int BACKEND_INDEX = 1;
-
     private final int PIPE_INDEX = 2;
 
     private double cpuUtilization = 0d;
@@ -39,22 +38,25 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
     private String loadBalancerAddress = "";
     private String planCreatorAddress = "";
     private String brokerIdentity = "";
-    private boolean isAwsCpuUtilization = false;
+    private String instanceId =  "";
+    private boolean isAwsDeployment = false;
 
     /**
      * @param brokerId - should be the broker id this server is running on
      */
     ZMQProcess_WorkerServer(String ip, int port, String brokerId, String loadBalancerAddress,
-                            String planCreatorAddress, boolean isAwsCpuUtilization) {
+                            String planCreatorAddress, String instanceId, Boolean isAwsDeployment) {
         super(getServerIdentity(brokerId));
         this.ip = "127.0.0.1";
         this.port = port;
         this.loadBalancerAddress = loadBalancerAddress;
         this.planCreatorAddress = planCreatorAddress;
-        this.isAwsCpuUtilization = isAwsCpuUtilization;
+        this.instanceId = instanceId;
+        this.isAwsDeployment = isAwsDeployment;
         logger.info("PlanCreator's address: {}", planCreatorAddress);
         logger.info("LoadBalancer's address: {}", loadBalancerAddress);
-        logger.info("isAwsCpuUtilization: {}", isAwsCpuUtilization);
+        logger.info("IsAwsDeployment: {}", isAwsDeployment);
+        logger.info("AWS InstanceId: {}", instanceId);
     }
 
     public static String getServerIdentity(String brokerId) {
@@ -83,10 +85,12 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
         socketArray[BACKEND_INDEX] = backend;
 
         LoadAnalyzerAgent agent = new LoadAnalyzerAgent();
-        Object[] args = new Object[3];
+        Object[] args = new Object[5];
         args[0] = planCreatorAddress;
         args[1] = brokerIdentity;
         args[2] = loadBalancerAddress;
+        args[3] = instanceId;
+        args[4] = isAwsDeployment;
         Socket pipe = ZThread.fork(new ZContext(), agent, args);
         socketArray[PIPE_INDEX] = pipe;
 
@@ -154,8 +158,7 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
 
         switch (msgType) {
             case TOPIC_METRICS:
-                ZMsg metricsMsg = getLoadMetrics();
-                msg.destroy();
+                ZMsg metricsMsg = getLoadMetrics(msg);
                 if (!metricsMsg.send(sockets.get(PIPE_INDEX))) {
                     logger.warn("Dropping client request as HWM reached.");
                 }
@@ -185,11 +188,13 @@ class ZMQProcess_WorkerServer extends ZMQProcess {
         logger.info("Shut down ZMQProcess_Server {}", getServerIdentity(identity));
     }
 
-    private ZMsg getLoadMetrics() {
-        Payload.MetricsPayload payload = new Payload.MetricsPayload(this.brokerIdentity, cpuUtilization, ResourceMetrics.getPublishedMessages(this.brokerIdentity));
-        ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);
+    private ZMsg getLoadMetrics(ZMsg msg) {
+        Payload.MetricsPayload payload = new Payload.MetricsPayload(this.brokerIdentity,
+                isAwsDeployment ? Double.parseDouble(msg.popString()): cpuUtilization, ResourceMetrics.getPublishedMessages(this.brokerIdentity));
+        ZMsg responseMsg = PayloadKt.payloadToZMsg(payload, kryo, null);
         ResourceMetrics.clear();
+        msg.destroy();
 
-        return msg;
+        return responseMsg;
     }
 }
