@@ -25,7 +25,7 @@ class SubscribeUnsubscribeTest {
     private lateinit var loadBalancerLogic: LoadBalancerLogic
     private lateinit var clientProcessManager: ZMQProcessManager
 
-    private val receiveTimeout = 1000
+    private val receiveTimeout = 4000
 
     @Before
     fun setUp() {
@@ -67,7 +67,7 @@ class SubscribeUnsubscribeTest {
         client.send(CONNECTPayload(l))
         client.send(SUBSCRIBEPayload(t, g))
 
-        sleepNoLog(500, 0)
+        sleepNoLog(1000, 0)
 
         // validate payloads
         assertTrue(client.receiveWithTimeout(receiveTimeout) is CONNACKPayload)

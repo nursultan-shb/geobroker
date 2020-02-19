@@ -22,7 +22,7 @@ class PingTest {
     private lateinit var serverLogic: SingleGeoBrokerServerLogic
     private lateinit var loadBalancerLogic: LoadBalancerLogic
     private lateinit var clientProcessManager: ZMQProcessManager
-    private val receiveTimeout = 3000
+    private val receiveTimeout = 4000
 
     @Before
     fun setUp() {
