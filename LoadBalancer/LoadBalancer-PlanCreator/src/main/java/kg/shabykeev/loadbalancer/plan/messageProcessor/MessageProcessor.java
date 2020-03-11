@@ -17,6 +17,12 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * MessageProcessor is a class to manage message processing of MessageProcessorAgent.
+ *
+ * @author Nursultan
+ * @version 1.0
+ */
 public class MessageProcessor {
     private static final Logger logger = LogManager.getLogger();
     private KryoSerializer kryo = new KryoSerializer();
@@ -37,6 +43,9 @@ public class MessageProcessor {
         pairSocket.connect(pairSocketAddress);
     }
 
+    /**
+     * Processes Plan Creator messages coming to the pipe socket, i.e., topic metrics and acknowledgements of migration tasks.
+     */
     public void processPipeMessage() {
         ZMsg msg = ZMsg.recvMsg(this.pipe);
         ZMsg msgCopy = msg.duplicate();
@@ -48,8 +57,8 @@ public class MessageProcessor {
                 msgQueue.add(msgCopy);
                 logger.info("added to queue" + msgCopy);
             } else if (payload instanceof Payload.ReqSubscriptionsAckPayload ||
-                        payload instanceof Payload.InjectSubscriptionsAckPayload ||
-                        payload instanceof Payload.UnsubscribeTopicAckPayload) {
+                    payload instanceof Payload.InjectSubscriptionsAckPayload ||
+                    payload instanceof Payload.UnsubscribeTopicAckPayload) {
                 //TODO check reason codes
                 performTasks(payload);
             }
@@ -57,6 +66,10 @@ public class MessageProcessor {
 
     }
 
+    /**
+     * Processes Generator messages coming to the pair socket, i.e., plan updates.
+     * If a plan update contains a migration procedure, MessageProcessor start the migration before releasing a plan.
+     */
     public void processPairSocketMessage() {
         ZMsg msg = ZMsg.recvMsg(this.pairSocket);
         Payload payload = PayloadKt.transformZMsg(msg, kryo);
@@ -79,6 +92,9 @@ public class MessageProcessor {
         }
     }
 
+    /**
+     * Sends metrics from a temporary queue to Generator.
+     */
     public void sendMetrics() {
         if (msgQueue.size() > 0 && !isMigrationOn) {
             List<String> messages = new ArrayList<>();

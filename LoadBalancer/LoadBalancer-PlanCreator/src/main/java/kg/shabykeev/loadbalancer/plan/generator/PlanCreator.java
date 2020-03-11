@@ -9,6 +9,14 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
+/**
+ * PlanCreator is a class to manage the plan creation.
+ * It checks whether CPU usages of cluster nodes are above SERVER_LOAD_THRESHOLD. If there is one, it
+ * creates a set of migration tasks where to transfer a topic with most published messages to the least loaded node.
+ *
+ * @author Nursultan
+ * @version 1.0
+ */
 public class PlanCreator {
     private static final Logger logger = LogManager.getLogger();
     private static final Double SERVER_LOAD_THRESHOLD = 60D;

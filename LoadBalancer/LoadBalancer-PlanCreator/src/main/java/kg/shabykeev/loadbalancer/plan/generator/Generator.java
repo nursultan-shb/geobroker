@@ -11,6 +11,12 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+/**
+ * Generator runs as a thread to start the plan creation procedure.
+ *
+ * @author Nursultan
+ * @version 1.0
+ */
 public class Generator extends Thread {
     private static final Logger logger = LogManager.getLogger();
     private KryoSerializer kryo = new KryoSerializer();

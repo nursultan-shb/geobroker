@@ -7,6 +7,14 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZThread;
 
+/**
+ * MessageProcessorAgent is a background task that runs as an attached thread, talking to its parent over a pipe socket.
+ * It received topic metrics from its parent and sends them to Generator.
+ * It communicates with Generator through PAIR sockets to get plan updates.
+ *
+ * @author Nursultan
+ * @version 1.0
+ */
 public class MessageProcessorAgent implements ZThread.IAttachedRunnable {
     private static final Logger logger = LogManager.getLogger();
 
@@ -14,7 +22,7 @@ public class MessageProcessorAgent implements ZThread.IAttachedRunnable {
     private final int PIPE_INDEX = 0;
     private final int PAIR_SOCKET_INDEX = 1;
 
-    private Long planGenerationDelay = 20*1000L;
+    private Long planGenerationDelay = 20 * 1000L;
     private Long lastPlanGenerationTime = planGenerationDelay; //millis
     private boolean isGeneratorBusy = false;
 
@@ -43,7 +51,7 @@ public class MessageProcessorAgent implements ZThread.IAttachedRunnable {
                 messageProcessor.processPairSocketMessage();
             }
 
-            if ((System.currentTimeMillis() - lastPlanGenerationTime >= planGenerationDelay) ) {
+            if ((System.currentTimeMillis() - lastPlanGenerationTime >= planGenerationDelay)) {
                 messageProcessor.sendMetrics();
                 lastPlanGenerationTime = System.currentTimeMillis();
             }
