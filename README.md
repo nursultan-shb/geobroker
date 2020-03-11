@@ -1,6 +1,6 @@
 # DynamicBalancer
 
-DynamicBalancer is a horizontal scalable pub/sub research prototype that distributes client messages across GeoBroker clusters.
+DynamicBalancer is a horizontal scalable pub/sub research prototype that distributes client messages across **GeoBroker** clusters.
 The load balancing mechanism considers live characteristics of passing traffic to dynamically adjust the load on servers. 
 DynamicBalancer is location-aware, as it additionally considers the geo-context of data to reduce excessive data dissemination and enable clients to have accurate control of message delivery.
 
