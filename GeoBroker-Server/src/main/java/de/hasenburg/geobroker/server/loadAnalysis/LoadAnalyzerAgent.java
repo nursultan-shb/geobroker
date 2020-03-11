@@ -4,6 +4,15 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZThread;
 
+/**
+ * LoadAnalyzerAgent is a background agent task that runs as an attached thread, talking to its parent over a pipe socket.
+ * It requests metrics from GeoBroker and sends notifications to ping Load Balancer.
+ * For that, it polls its two sockets and processes incoming messages.
+ * Additionally, through the dealer socket it can get a command from PlanCreator related to the migration procedure.
+ *
+ * @author Nursultan
+ * @version 1.0
+ */
 public class LoadAnalyzerAgent implements ZThread.IAttachedRunnable {
     private Long lastUtilizationRequestTime = System.currentTimeMillis();
     private Long lastLoadBalancerPingTime = 0L;

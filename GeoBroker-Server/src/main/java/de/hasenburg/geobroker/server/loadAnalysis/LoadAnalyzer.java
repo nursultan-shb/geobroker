@@ -19,6 +19,12 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Random;
 
+/**
+ * LoadAnalyzer processes messages coming to LoadAnalyzerAgent.
+ *
+ * @author Nursultan
+ * @version 1.0
+ */
 public class LoadAnalyzer {
     private static final Logger logger = LogManager.getLogger();
     private KryoSerializer kryo = new KryoSerializer();
@@ -57,11 +63,17 @@ public class LoadAnalyzer {
         logger.info("Local Load Analyzer started. IsAwsDeployment: {}. Instance_Id: {}", isAwsDeployment, instanceId);
     }
 
+    /**
+     * Handles messages from the pipe socket, i.e., topic metrics and directs them to PlanCreator through the dealer socket.
+     */
     public void handlePipeMessage() {
         ZMsg msg = ZMsg.recvMsg(pipe);
         msg.send(dealer);
     }
 
+    /**
+     * Handles messages from the pipe dealer socket, i.e., commands from PlanCreator related to the topic migration.
+     */
     public void handleDealerMessage() {
         ZMsg msg = ZMsg.recvMsg(dealer);
         msg.push(planCreatorAddress);
@@ -69,23 +81,23 @@ public class LoadAnalyzer {
         msg.send(pipe);
     }
 
+    /**
+     * Requests topic metrics from GeoBroker.
+     */
     public void requestUtilization() {
         ZMsg msgRequest = new ZMsg();
         msgRequest.add(ZMsgType.TOPIC_METRICS.toString());
         if (isAwsDeployment) {
-            double cpuLoad =  getCpuLoad(1);
+            double cpuLoad = getCpuLoad(1);
             msgRequest.add(String.valueOf(cpuLoad));
         }
 
         msgRequest.send(pipe);
     }
 
-    private String setIdentity(ZMQ.Socket socket) {
-        String id = String.format(baseIdentity + " %04X-%04X", rand.nextInt(), rand.nextInt());
-        socket.setIdentity(id.getBytes(ZMQ.CHARSET));
-        return id;
-    }
-
+    /**
+     * Sends the ping message to GeoBroker that is to be directed to Load Balancer.
+     */
     public void sendPing() {
         Payload.PINGREQPayload payload = new Payload.PINGREQPayload(Location.undefined());
         ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, loadBalancerAddress);
@@ -100,11 +112,17 @@ public class LoadAnalyzer {
         this.pipe.close();
     }
 
+    private String setIdentity(ZMQ.Socket socket) {
+        String id = String.format(baseIdentity + " %04X-%04X", rand.nextInt(), rand.nextInt());
+        socket.setIdentity(id.getBytes(ZMQ.CHARSET));
+        return id;
+    }
+
     private double getCpuLoad(int startFromMinutesBack) {
         GetMetricStatisticsRequest request = GetMetricStatisticsRequest.builder()
                 .metricName("CPUUtilization").namespace("AWS/EC2").period(60)
                 .statistics(Statistic.MAXIMUM)
-                .startTime(Instant.ofEpochMilli((new Date(new Date().getTime() - startFromMinutesBack*60*1000)).getTime()))
+                .startTime(Instant.ofEpochMilli((new Date(new Date().getTime() - startFromMinutesBack * 60 * 1000)).getTime()))
                 .endTime(Instant.ofEpochMilli((new Date()).getTime()))
                 .unit(StandardUnit.PERCENT)
                 .dimensions(dimension)

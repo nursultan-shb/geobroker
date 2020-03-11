@@ -22,7 +22,6 @@ public class ResourceMetrics {
      *
      * @param topic         A topic.
      * @param messagesCount a number of published messages
-     * @return void
      */
     public synchronized static void setPublishedMessages(Topic topic, Integer messagesCount) {
         if (publishedMessages.containsKey(topic)) {
@@ -47,8 +46,6 @@ public class ResourceMetrics {
 
     /**
      * Clears the topic/published messages map.
-     *
-     * @return void
      */
     public synchronized static void clear() {
         publishedMessages.clear();
