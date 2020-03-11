@@ -14,7 +14,7 @@ To create the DynamicBalancer environment, one needs to run the Ansible command:
 
 Once the infrastructure is ready and all files are copied, the command launches the DynamicBalancer services. 
 
-To start clients, one needs to run `ansible clients_start.yml`. <br />
+To start clients, one needs to run: `ansible clients_start.yml`. <br />
 To terminate all EC2 instances, one needs to run: `ansible terminate_instances.yml`. <br />
 To terminate DynamicBalancer environment, one needs to run: `ansible terminate_environment.yml`. <br />
 
