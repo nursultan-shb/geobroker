@@ -9,7 +9,6 @@ import org.zeromq.ZContext
 import org.zeromq.ZMQ
 import org.zeromq.ZMQ.Socket
 import org.zeromq.ZMsg
-import java.lang.RuntimeException
 import kotlin.math.roundToInt
 
 private val logger = LogManager.getLogger()
@@ -68,12 +67,26 @@ class SPDealer(val ip: String = "localhost", val port: Int = 5559, val socketHWM
 
     fun shutdown() {
         job.cancel()
-        zContext.destroy()
+        pusher.setLinger(0)
+        pusher.close()
+        puller.setLinger(0)
+        puller.close()
+        logger.info("closing in sockketList")
+        if (socketList.size > 0) {
+            for (socket in socketList) {
+                socket.setLinger(0)
+                socket.close()
+            }
+        }
+
         poolToSent.close()
         poolSendAndReceive.close()
         toSent.close()
         wasSent.close()
         wasReceived.close()
+
+        logger.info("destroy context")
+        zContext.destroy()
         logger.info("Shutdown of SPDealer completed")
     }
 
