@@ -12,6 +12,12 @@ GeoBroker is a pub/sub system research prototype that not only uses content info
 but also the geo-context of publishers and subscribers for the matching of messages.
 The original code of GeoBroker is accessible in: https://github.com/MoeweX/geobroker.
 
+As this project contains multiple git submodules, one needs to run the following after cloning:
+```
+git submodule init
+git submodule update
+```
+
 ## Deployment
 
 To deploy DynamicBalancer, follow: `deploy/READ.ME`
