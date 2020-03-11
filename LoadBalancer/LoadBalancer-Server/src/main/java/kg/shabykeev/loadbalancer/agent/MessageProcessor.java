@@ -13,6 +13,12 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+/**
+ * MessageProcessor processes messages coming to Load Balancer Agent.
+ *
+ * @author Nursultan
+ * @version 1.0
+ */
 public class MessageProcessor {
     private static final Logger logger = LogManager.getLogger();
     private KryoSerializer kryo = new KryoSerializer();
@@ -39,6 +45,9 @@ public class MessageProcessor {
     public void handlePipeMessage() {
     }
 
+    /**
+     * Handles messages from the dealer socket, i.e., plan updates and a ping response from PlanCreator.
+     */
     public void handleDealerMessage() {
         ZMsg dealerMessage = ZMsg.recvMsg(dealer);
         ZMsg msg = dealerMessage.duplicate();
@@ -52,6 +61,9 @@ public class MessageProcessor {
         }
     }
 
+    /**
+     * Sends keep-alive ping to PlanCreator.
+     */
     public void ping() {
         Payload.PINGREQPayload payload = new Payload.PINGREQPayload(Location.random());
         ZMsg msg = PayloadKt.payloadToZMsg(payload, kryo, null);

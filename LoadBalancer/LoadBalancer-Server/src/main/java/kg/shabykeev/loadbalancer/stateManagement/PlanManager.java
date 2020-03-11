@@ -6,6 +6,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * PlanManager is a class to manage a plan work.
+ * Initially, a plan is represented by a round-robin principle. After, plan can be adjusted by PlanCreator.
+ *
+ * @author Nursultan
+ * @version 1.0
+ */
 public class PlanManager {
     private Logger logger;
     private HashMap<Integer, String> brokers = new HashMap<>();
@@ -35,6 +42,12 @@ public class PlanManager {
         return getNextServer(topic);
     }
 
+    /**
+     * Adds a broker to a list of connected brokers.
+     *
+     * @param server The ID of broker.
+     * @return server as a String
+     */
     public void addServer(String server) {
         if (!brokers.containsValue(server)) {
             brokers.put(nextServerId, server);
@@ -46,14 +59,28 @@ public class PlanManager {
         }
     }
 
+    /**
+     * Gets a list of connected brokers.
+     *
+     * @return List of broker IDs.
+     */
     public List<String> getBrokers() {
         return brokersList;
     }
 
+    /**
+     * Adds a plan update.
+     *
+     * @param topic  a topic
+     * @param server a broker that is responsible for a topic
+     */
     public void addPlan(String topic, String server) {
         planMap.put(topic, server);
     }
 
+    /**
+     * Prints the current state of a plan.
+     */
     public void printPlan() {
         StringBuilder sb = new StringBuilder();
         planMap.forEach((k, v) -> sb.append(String.format("%s:%s ", k, v)));

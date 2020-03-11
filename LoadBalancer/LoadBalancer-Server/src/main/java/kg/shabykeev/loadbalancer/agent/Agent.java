@@ -6,6 +6,14 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZThread;
 
+/**
+ * Agent is a background task that runs as an attached thread, talking to its parent over a pipe socket.
+ * It communicates with PlanCreator through the dealer socket by sending keep-alive pings to PlanCreator
+ * and accepting plan updates.
+ * For that, it polls its two sockets and processes incoming messages.
+ * @author Nursultan
+ * @version 1.0
+ */
 public class Agent implements ZThread.IAttachedRunnable {
     private static final Logger logger = LogManager.getLogger();
     private MessageProcessor messageProcessor;
