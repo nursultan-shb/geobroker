@@ -1,0 +1,28 @@
+---
+- name: Create EC2 instances for GeoBroker
+  ec2:
+    key_name: "{{ keypair }}"
+    group_id: "{{ group_id }}"
+    instance_type: "{{ geobroker_instance_type }}"
+    image: "{{ ami }}"
+    wait: true
+    count: "{{ geobroker_instances_count }}"
+    vpc_subnet_id: "{{ created_subnet.subnet.id }}"
+    assign_public_ip: yes
+    monitoring : yes
+    instance_tags:
+        instance_class: geobroker
+  register: ec2
+ 
+- name: Add new instance to host group
+  add_host:
+    hostname: "{{ item.public_ip }}"
+    groupname: geobrokers
+  loop: "{{ ec2.instances }}"   
+
+- name: Wait for SSH to become open on the host
+  wait_for:
+    host: "{{ item.public_ip }}"
+    port: 22
+    delay: 2
+  loop: "{{ ec2.instances }}"

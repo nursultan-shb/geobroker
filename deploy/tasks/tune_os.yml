@@ -1,0 +1,10 @@
+- name: Copy config with soft and hard limits
+  become: yes
+  copy:
+    src: tasks/custom.conf
+    dest: /etc/security/limits.d/ 
+    
+- name: Reboot the machine
+  become: yes 
+  reboot:
+  

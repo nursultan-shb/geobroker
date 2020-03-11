@@ -1,0 +1,72 @@
+    
+- name: Gather info VPC 
+  ec2_vpc_net:
+    name: " {{ id }}-vpc "
+    cidr_block: "{{ vpc_cidr_block }}"
+  register: vpc
+
+- name: Remove route table
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc.vpc.id }}"
+    tags:
+      Name: "{{ id }}-rtb"
+    state: absent
+    
+- name: Remove security group
+  ec2_group:
+    group_id: "{{ security_group_id }}"
+    vpc_id: "{{ vpc.vpc.id }}"    
+    state: absent       
+    
+- name: Remove Internet Gateway
+  ec2_vpc_igw:
+    vpc_id: "{{ vpc.vpc.id }}"
+    state: absent  
+    
+- name: Remove subnet
+  ec2_vpc_subnet:   
+    vpc_id: "{{ vpc.vpc.id  }}"
+    cidr: "{{ vpc_cidr_block }}"
+    state: absent      
+    
+- name: Remove VPC 
+  ec2_vpc_net:
+    state: absent
+    name: " {{ id }}-vpc "
+    cidr_block: "{{ vpc_cidr_block }}"
+    
+- name: Gather info client VPC 
+  ec2_vpc_net:
+    name: " {{ client_id }}-vpc "
+    cidr_block: "{{ vpc_cidr_block }}"
+  register: client_vpc 
+    
+- name: Remove client route table
+  ec2_vpc_route_table:
+    vpc_id: "{{ client_vpc.vpc.id }}"
+    tags:
+      Name: "{{ client_id }}-rtb"
+    state: absent
+
+- name: Remove client security group
+  ec2_group:
+    group_id: "{{ client_security_group_id }}"
+    vpc_id: "{{ client_vpc.vpc.id }}"    
+    state: absent     
+
+- name: Remove client Internet Gateway
+  ec2_vpc_igw:
+    vpc_id: "{{ client_vpc.vpc.id }}"
+    state: absent  
+    
+- name: Remove client subnet
+  ec2_vpc_subnet:   
+    vpc_id: "{{ client_vpc.vpc.id  }}"
+    cidr: "{{ vpc_cidr_block }}"
+    state: absent    
+      
+- name: Remove client VPC 
+  ec2_vpc_net:
+    state: absent
+    name: " {{ client_id }}-vpc "
+    cidr_block: "{{ vpc_cidr_block }}"    

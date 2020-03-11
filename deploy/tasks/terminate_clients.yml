@@ -1,0 +1,10 @@
+- ec2_instance_info:
+    filters:
+      "tag:instance_class": clients
+  register: ec2
+    
+- name: Kill EC2 Instances
+  ec2:
+    instance_ids: "{{ item.instance_id }}"
+    state: absent
+  loop: "{{ ec2.instances }}"

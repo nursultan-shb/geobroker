@@ -1,0 +1,9 @@
+---
+#had to split, as vpc subnet can not be deleted in the same play as deletion of EC2    
+- name: Terminate LoadBalancer Environment
+  hosts: localhost
+  gather_facts: true  
+  pre_tasks:
+    - include_vars: variables.yml
+  tasks:    
+    - include_tasks: tasks/delete_env.yml

@@ -1,0 +1,80 @@
+---
+- name: Add zip directory_count to variables 
+  hosts: localhost
+  connection: local
+  gather_facts: False
+ 
+  pre_tasks:
+    - include_vars: variables.yml     
+  tasks:
+    - include_tasks: tasks/terminate_clients.yml
+    - include_tasks: tasks/init_client_env.yml  
+    - find:
+        paths: "{{ client_path }}zipped"
+      register: zipped_files
+      
+    - lineinfile:
+        path: "variables.yml"
+        regexp: '^directory_count:'
+        line: 'directory_count: {{ zipped_files.matched }}'
+        mode: '0644'    
+        
+        
+- name: Create EC2 instance(s) for Clients
+  hosts: localhost
+  connection: local
+  pre_tasks:
+    - include_vars: variables.yml     
+  tasks:        
+    - include: tasks/client.yml   
+
+- name: Tune OS
+  hosts: clients
+  pre_tasks:
+    - include_vars: variables.yml
+  tasks:      
+    - include: tasks/tune_os.yml
+
+- hosts: localhost
+  pre_tasks:
+    - include_vars: variables.yml  
+  tasks:   
+    - wait_for:
+        host: "{{ item }}"
+        port: 22
+        delay: 1
+      loop: "{{ groups['clients'] }}"
+    
+    - name: Make a script to get LoadBalancer's CPU utilization
+      template: 
+        src: tasks/cpu.j2
+        dest: tasks/lb_cpu.txt     
+        mode: 0777    
+   
+   
+- name: Install JDK and copy files
+  hosts: clients
+  pre_tasks:
+    - include_vars: variables.yml
+  tasks:      
+    - include: tasks/install_jdk.yml
+    - include: tasks/copy_files.yml
+  
+- name: Run service
+  hosts: clients 
+  pre_tasks:
+    - include_vars: variables.yml
+  tasks:
+    - name: Run service
+      shell: cd jar && sh run.sh
+      
+    - pause:
+        minutes: 16
+        prompt: "Waiting until clients are done"    
+ 
+- name: Fetch result files
+  hosts: localhost 
+  pre_tasks:
+    - include_vars: variables.yml     
+  tasks:
+    - include: tasks/fetch_files.yml

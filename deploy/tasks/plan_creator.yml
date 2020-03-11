@@ -1,0 +1,49 @@
+
+- name: Create Plan-Creator EC2 instance
+  ec2:
+    key_name: "{{ keypair }}"
+    group_id: "{{ group_id }}"
+    instance_type: "{{ loadbalancer_instance_type }}"
+    image: "{{ ami }}"
+    wait: true
+    count: 1
+    vpc_subnet_id: "{{ created_subnet.subnet.id }}"
+    assign_public_ip: yes
+    instance_tags:
+        instance_class: "{{ id }}-servers"
+  register: ec2_plan_creator
+ 
+- name: "Set fact: Plan-Creator public IP"
+  set_fact:
+    plan_creator_ip_address: "{{ ec2_plan_creator.instances[0].public_ip }}"
+
+- name: Plan-Creator's public IP    
+  debug:
+    var: plan_creator_ip_address
+
+- name: Add Plan-Creator's IP to LB configuration file
+  lineinfile:
+    path: "{{ loadbalancer_path }}configuration.toml"
+    regexp: '^planCreatorAddress = '
+    line: 'planCreatorAddress = "tcp://{{ plan_creator_ip_address }}:7012"'
+    mode: '0644'
+
+- name: Add Plan-Creator's IP to GeoBroker configuration file
+  lineinfile:
+    path: "{{ geobroker_path }}configuration.toml"
+    regexp: '^planCreatorAddress = '
+    line: 'planCreatorAddress = "tcp://{{ plan_creator_ip_address }}:7080"'
+    mode: '0644'    
+     
+- name: Add host to group 'Plan-Creator'
+  add_host:
+    name: "{{ plan_creator_ip_address }}"
+    groups: 
+      - loadbalancer_group 
+      - plan_creator_group
+
+- name: Wait for SSH to become open on the host
+  wait_for:
+    host: "{{ plan_creator_ip_address }}"
+    port: 22
+    delay: 4

@@ -1,0 +1,44 @@
+---
+- wait_for:
+    path: "{{ rm_files_path }}/{{ item }}/{{ received_file_name }}"
+  delegate_to: "{{ groups['clients'][item | int] }}"
+  run_once: yes  
+  with_sequence: start=0 end="{{ directory_count - 1 }}"
+
+- name: Delete results directory 
+  file:
+    state: absent
+    path: "{{client_path}}results/"
+
+- name: Create results directory 
+  file:
+    state: directory
+    path: "{{client_path}}results"
+  
+- fetch:
+    src: "{{ rm_files_path }}/{{ item }}/{{ received_file_name }}"
+    dest: "{{client_path}}results/{{ item }}-{{ received_file_name }}"
+    flat: yes
+  delegate_to: "{{ groups['clients'][item | int] }}"
+  run_once: yes  
+  with_sequence: start=0 end="{{ directory_count - 1 }}"
+  
+- fetch:
+    src: "{{ rm_files_path }}/{{ item }}/{{ sent_file_name }}"
+    dest: "{{client_path}}results/{{ item }}-{{ sent_file_name }}"
+    flat: yes
+  delegate_to: "{{ groups['clients'][item | int] }}"
+  run_once: yes  
+  with_sequence: start=0 end="{{ directory_count - 1 }}"
+  
+- pause:
+    minutes: 5
+    prompt: "Waiting 5 more minutes"
+
+- name: Run a script to get CPU Utilization
+  command: sh tasks/lb_cpu.txt
+  register: cpu_util
+  
+- copy:
+    content: "{{cpu_util.stdout}}"
+    dest: "{{client_path}}results/lb_cpu_util.out"

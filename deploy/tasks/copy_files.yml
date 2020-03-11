@@ -1,0 +1,32 @@
+---
+- name: Create a directory if it does not exist    
+  file:
+    path: "{{ rm_files_path }}/{{ item }}"
+    state: directory
+  delegate_to: "{{ groups['clients'][item | int] }}"
+  run_once: yes  
+  with_sequence: start=0 end="{{ directory_count - 1 }}"
+  
+- unarchive : 
+    src: "{{ client_path }}zipped/{{ item }}.zip"
+    dest: "{{ rm_files_path }}"
+  delegate_to: "{{ groups['clients'][item | int] }}"
+  run_once: yes  
+  with_sequence: start=0 end="{{ directory_count - 1 }}"
+  
+- copy: 
+    src: "{{ client_path }}run.sh"
+    dest: "{{ rm_files_path }}"
+
+- copy: 
+    src: "{{ client_path }}MultiFileClient.jar"
+    dest: "{{ rm_files_path }}"  
+    
+- lineinfile:
+    path: "{{ rm_files_path }}/run.sh"
+    regexp: '^nohup java -jar'
+    line: 'nohup java -jar -Xms200m -Xmx6000m MultiFileClient.jar --dir "{{item}}" --ip-address "{{ loadbalancer_ip }}" --port {{ loadbalancer_frontend_port }} --high-watermark 300000 &'
+    mode: '0644'  
+  delegate_to: "{{ groups['clients'][item | int] }}" 
+  run_once: yes
+  with_sequence: start=0 end="{{ directory_count - 1 }}"   

@@ -1,0 +1,40 @@
+geobroker_instance_type: t3.medium
+loadbalancer_instance_type: t3.large
+# AMI of machines. Same for all type of services. 
+ami: ami-0d4c3eabb9e72650a
+keypair: ntn_masters
+# The ID of the environment. Will be added as a tag to query by.
+id: "loadbalancer"
+# The ID of client environment. Will be added as a tag to query by.
+client_id: "loadbalancer-client"
+vpc_cidr_block: 10.0.0.0/24
+# path to service folder on a remote machine. The same for all type of services
+rm_files_path: /home/ec2-user/jar
+# paths to service folders
+plan_creator_path: jars/plan_creator/
+loadbalancer_path: jars/loadbalancer/
+geobroker_path: jars/geobroker/
+client_path: jars/client/
+received_file_name: wasReceived.txt
+sent_file_name: wasSent.txt
+# cluster size
+geobroker_instances_count: 1
+loadbalancer_frontend_port: 7225
+
+os_environment:
+  - key: AWS_DEFAULT_REGION 
+    value: eu-central-1
+  - key: AWS_ACCESS_KEY_ID 
+    value: 
+  - key: AWS_SECRET_ACCESS_KEY 
+    value: 
+
+#auto-filled, temporary variables. Not to be filled manually
+directory_count: 1
+subnet_id: subnet-id
+client_subnet_id: client_subnet_id
+security_group_id: security-group-id
+client_security_group_id: client_security_group_id
+loadbalancer_ip: 192.168.0.1
+lb_instance_id: lb_instance_id
+

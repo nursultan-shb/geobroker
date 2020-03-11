@@ -1,0 +1,87 @@
+---
+- name: Create LoadBalancer environment
+  hosts: localhost
+  connection: local
+ 
+  pre_tasks:
+    - include_vars: variables.yml     
+  tasks:
+    - include_tasks: tasks/terminate_clients.yml
+    - include_tasks: tasks/terminate_geobrokers.yml
+    - include_tasks: tasks/terminate_lb.yml
+    - include_tasks: tasks/init_server_env.yml
+    - include_tasks: tasks/plan_creator.yml
+    - include_tasks: tasks/load_balancer.yml
+    - include_tasks: tasks/geobroker.yml    
+
+### copy jar files and tune OS ###
+
+- hosts: plan_creator_group
+  pre_tasks:
+    - include_vars: variables.yml    
+  tasks:
+    - copy: 
+        src: "{{ plan_creator_path }}"
+        dest: "{{ rm_files_path }}"  
+
+- hosts: loadbalancer_server_group
+  pre_tasks:
+    - include_vars: variables.yml    
+  tasks:
+    - copy: 
+        src: "{{ loadbalancer_path }}"
+        dest: "{{ rm_files_path }}"
+    - include_tasks: tasks/tune_os.yml   
+
+- hosts: geobrokers
+  pre_tasks:
+    - include_vars: variables.yml
+  tasks:     
+    - copy: 
+        src: "{{ geobroker_path }}"
+        dest: "{{ rm_files_path }}"      
+        
+    - include_tasks: tasks/set_credentials.yml    
+    - include_tasks: tasks/tune_os.yml        
+    
+- hosts: localhost
+  pre_tasks:
+    - include_vars: variables.yml
+  tasks:
+    - wait_for:
+        host: "{{ loadbalancer_ip }}"
+        port: 22
+        delay: 10
+    
+    - wait_for:
+        host: "{{ item }}"
+        port: 22
+        delay: 10
+      loop: "{{ groups['geobrokers'] }}"
+      
+    - ec2_instance_info:
+        filters:
+          "tag:instance_class": geobroker
+          instance-state-name: running
+      register: ec2_instances
+
+    - name: add EC2 instanceId to config file
+      lineinfile:
+        path: "{{ rm_files_path }}/configuration.toml"
+        regexp: '^instanceId'
+        line: 'instanceId = "{{ item.instance_id }}"'
+        mode: '0644'
+      delegate_to: "{{ item.public_ip_address }}" 
+      run_once: yes
+      loop: "{{ ec2_instances.instances }}"             
+      
+### launch services ###
+     
+- hosts: loadbalancer_group, geobrokers
+  pre_tasks:
+    - include_vars: variables.yml    
+  tasks:        
+    - include_tasks: tasks/install_jdk.yml              
+    
+    - name: Run service
+      shell: cd jar && sh run.sh    

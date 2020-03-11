@@ -1,0 +1,19 @@
+- name: Install pexpect
+  shell: easy_install pexpect
+  become: yes 
+    
+- name: Install OpenJDK 11
+  become: yes
+  expect:
+    command: amazon-linux-extras install java-openjdk11
+    timeout: 300
+    responses:
+      (.*)Is this ok(.*): y
+      
+- name: Install htop
+  become: yes
+  expect:
+    command: yum install htop
+    timeout: 300
+    responses:
+      (.*)Is this ok(.*): y      
