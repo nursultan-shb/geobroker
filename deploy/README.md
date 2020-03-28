@@ -20,15 +20,15 @@ Once the infrastructure is ready and all files are copied, the command launches 
 7. The *terminate_instances.yml* file contains a set of commands to terminate all EC2 instances. It is used at the end of each experiment.
 8. The *terminate_environment.yml* file contains a set of commands to terminate AWS environment.
 
-##Launch the server environment
+## Launch the server environment
 Before creating the infrastructure, one needs to add a public key file *.pem to the current folder and put the name of the key in the property *private_key_file* of the *ansible.cfg* file.\
 To create the server infrastructure and start DynamicBalancer services, run `ansible-playbook main.yml`. When the command is successfully finished, DynamicBalancer is ready to accept client messages. 
 The address of the load balancer where clients can send their messages to is available in properties *loadbalancer_ip* and *loadbalancer_frontend_port* of the *variables.yml* file.
 
-##Launch clients
+## Launch clients
 To start clients, one needs to run: `ansible-playbook clients_start.yml`.
 
-##Terminate the environment
+## Terminate the environment
 To terminate all EC2 instances, one needs to run: `ansible-playbook terminate_instances.yml`. <br />
 To terminate DynamicBalancer environment, one needs to run: `ansible-playbook terminate_environment.yml`. <br />
 
