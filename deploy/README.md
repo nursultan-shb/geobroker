@@ -25,31 +25,47 @@ It can be used after each experiment.
 8. The *terminate_environment.yml* file contains a set of commands to terminate the rest of AWS services. 
 It can be used as a final clearance step when all experiments are done. Note, this command should be run after the playbook *terminate_instances.yml*.
 
-## Before the run
+## Before running DynamicBalancer services
 Before running Ansible scripts, one needs to install Ansible on a local machine and configure AWS credentials. 
 Below, there is an example of fulfilling these procedures on AWS EC2 machine. Note, in this example, we store AWS credentials in the environment variables. One can use other options to specify AWS credentials, e.g., in a configuration file.
 - [Install python3 and boto3](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-python3-boto3).
 - Install ansible: `pip3 install ansible`.
-- As some of Ansible commands require *boto*, install it: `pip install boto`. 
+- As some of Ansible commands require *boto*, install: `pip install boto`. 
 - Install AWS CLI: `pip3 install awscli`.
 - Configure AWS credentials using environment variables:\
   `export AWS_DEFAULT_REGION='YOUR_REGION'`\
   `export AWS_ACCESS_KEY_ID='YOUR_ACCESS_KEY_ID'`\
-  `export AWS_SECRET_ACCESS_KEY='YOUR_SECRET_ACCESS_KEY'` \
-  
-- Add a public key file *.pem for accessing EC2 instances to the current folder and put the name of the key in the property *private_key_file* of the *ansible.cfg* file.
+  `export AWS_SECRET_ACCESS_KEY='YOUR_SECRET_ACCESS_KEY'` 
+- In *variables.yml*, replace AMI ID of EC2 instance with AMI ID that is available to your account.
+- In *variables.yml*, add AWS credentials to *os_environment* properties.  
+- Add a public key *.pem file for accessing EC2 instances to the current folder. Set the file permission: `chmod 600 <filename>`.\
+Put the name of the key in the property *private_key_file* of the *ansible.cfg* file 
+and in the property *keypair* of *variables.yml*.
 
 ## Run DynamicBalancer services
+Configure the setup in *variables.yml* if needed.\
 To create the server infrastructure and start DynamicBalancer services, run `ansible-playbook main.yml`. \
 When the command is successfully finished, DynamicBalancer is ready to accept client messages. 
 The address of the load balancer where clients can send their messages to is available in properties *loadbalancer_ip* and *loadbalancer_frontend_port* of the *variables.yml* file.
 
 ## Run clients
-To start clients, run: `ansible-playbook clients_start.yml`.
+This section describes the current way of running clients. 
+Note, you can build your own clients and direct messages to the loadbalancer of DynamicBalancer as long as they send message types supported by [GeoBroker](https://github.com/MoeweX/geobroker).
+In our case, we use [HikingGenerator](https://github.com/MoeweX/IoTDSG/blob/master/IoTDSG/src/main/kotlin/de/hasenburg/iotdsg/HikingGenerator.kt) that generates files to simulate a hiking scenario where clients travel on predefined routes.\
+
+The generated files are to be grouped and compressed into directories. Each group of files will be executed on a separate EC2 instance.
+A name of each directory should start with an increasing integer number. For example, the first EC2 client instance will take care of a directory named '0.zip', the second - for a directory '1.zip'.
+Put compressed files into the directory: *deploy\jars\client\zipped*. 
+The playbook `clients_start.yml` will start exactly the same number of EC2 client instances as a number of compressed directories. 
+The current repository contains three compressed directories, i.e, three EC2 client instances will be started. \
+
+To start clients, run: `ansible-playbook clients_start.yml`. After execution of an experiment, this playbook fetches results (*wasSent.txt and *wasReceived.txt files) into the folder: *deploy\jars\client\results*.
 
 ## Terminate the environment
 To terminate all EC2 instances, run: `ansible-playbook terminate_instances.yml`.\
-To terminate all other AWS services, run: `ansible-playbook terminate_environment.yml`. <br />
+To terminate all other AWS services, run: `ansible-playbook terminate_environment.yml`.\
+
+
 
 
 
