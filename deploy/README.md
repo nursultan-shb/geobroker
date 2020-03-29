@@ -66,7 +66,7 @@ The results are represented by files:
  
 ## Terminate the environment
 To terminate all EC2 instances, run: `ansible-playbook terminate_instances.yml`.\
-To terminate all other AWS services, run: `ansible-playbook terminate_environment.yml`.
+To terminate all other AWS services, run: `ansible-playbook terminate_environment.yml`. Note, sometimes this command may end with an error. The second run of the command solves a problem.
 
 
 
