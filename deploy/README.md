@@ -63,7 +63,7 @@ To start clients, run: `ansible-playbook clients_start.yml`. When an experiment 
 
 ## Terminate the environment
 To terminate all EC2 instances, run: `ansible-playbook terminate_instances.yml`.\
-To terminate all other AWS services, run: `ansible-playbook terminate_environment.yml`.\
+To terminate all other AWS services, run: `ansible-playbook terminate_environment.yml`.
 
 
 
