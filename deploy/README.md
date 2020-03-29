@@ -59,8 +59,11 @@ Put compressed files into the directory: *deploy\jars\client\zipped*.
 The playbook `clients_start.yml` will start exactly the same number of EC2 client instances as a number of compressed directories. 
 The current repository contains three compressed directories, i.e, three EC2 client instances will be started. 
 
-To start clients, run: `ansible-playbook clients_start.yml`. When an experiment ends, this playbook fetches results (*wasSent.txt and *wasReceived.txt files) into the folder: *deploy\jars\client\results*.
-
+To start clients, run: `ansible-playbook clients_start.yml`. When an experiment ends, this playbook fetches results into the folder: *deploy\jars\client\results*.
+The results are represented by files: 
+- *i-wasSent.txt* and *i-wasReceived.txt* that contain send and received messages respectively. The 'i' integer number in a file name indicates an EC2 client instance where they were fetched from. 
+- *lb_cpu_util.out* that contains CPU load of a load balancer.
+ 
 ## Terminate the environment
 To terminate all EC2 instances, run: `ansible-playbook terminate_instances.yml`.\
 To terminate all other AWS services, run: `ansible-playbook terminate_environment.yml`.
