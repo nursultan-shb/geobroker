@@ -16,20 +16,32 @@ The following AWS services are launched:
     - EC2 instances for DynamicBalancer components.
 Once the infrastructure is ready and all files are copied, the command launches the DynamicBalancer services. 
 
-6. The *clients_start.yml* file contains a set of commands to create the infrastructure on AWS for Clients and deploy the client service there.
+6. The *clients_start.yml* file contains a set of commands to create the infrastructure on AWS for Clients and deploy client services.
 7. The *terminate_instances.yml* file contains a set of commands to terminate all EC2 instances. It is used at the end of each experiment.
 8. The *terminate_environment.yml* file contains a set of commands to terminate AWS environment.
 
-## Launch the server environment
-Before creating the infrastructure, one needs to add a public key file *.pem to the current folder and put the name of the key in the property *private_key_file* of the *ansible.cfg* file.\
+## Before the run
+Before running Ansible scripts, one needs to install Ansible on a local machine and configure AWS credentials. Below, there is an example of fulfilling these procedures on AWS EC2 machine.
+    - [Install python3 and boto3](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-python3-boto3).
+    - Install ansible: `pip3 install ansible`.
+    - As some of Ansible commands require *boto*, install it: `pip install boto`. 
+    - Install AWS CLI: `pip3 install awscli`.
+    - Configure AWS credentials using environment variables:
+      `export AWS_DEFAULT_REGION='YOUR_REGION'
+       export AWS_ACCESS_KEY_ID='YOUR_ACCESS_KEY_ID'
+       export AWS_SECRET_ACCESS_KEY='YOUR_SECRET_ACCESS_KEY'` \
+      Note, other options to specify AWS credentials can be used, e.g., in a configuration file.
+    - Add a public key file *.pem for accessing EC2 instances to the current folder and put the name of the key in the property *private_key_file* of the *ansible.cfg* file.
+
+## Run DynamicBalancer services
 To create the server infrastructure and start DynamicBalancer services, run `ansible-playbook main.yml`. When the command is successfully finished, DynamicBalancer is ready to accept client messages. 
 The address of the load balancer where clients can send their messages to is available in properties *loadbalancer_ip* and *loadbalancer_frontend_port* of the *variables.yml* file.
 
-## Launch clients
+## Run clients
 To start clients, one needs to run: `ansible-playbook clients_start.yml`.
 
 ## Terminate the environment
-To terminate all EC2 instances, one needs to run: `ansible-playbook terminate_instances.yml`. <br />
+To terminate all EC2 instances, one needs to run: `ansible-playbook terminate_instances.yml`.\
 To terminate DynamicBalancer environment, one needs to run: `ansible-playbook terminate_environment.yml`. <br />
 
 
