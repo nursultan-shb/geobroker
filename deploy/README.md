@@ -57,9 +57,9 @@ The generated files are to be grouped and compressed into directories. Each grou
 A name of each directory should start with an increasing integer number. For example, the first EC2 client instance will take care of a directory named '0.zip', the second - for a directory '1.zip'.
 Put compressed files into the directory: *deploy\jars\client\zipped*. 
 The playbook `clients_start.yml` will start exactly the same number of EC2 client instances as a number of compressed directories. 
-The current repository contains three compressed directories, i.e, three EC2 client instances will be started. \
+The current repository contains three compressed directories, i.e, three EC2 client instances will be started. 
 
-To start clients, run: `ansible-playbook clients_start.yml`. After execution of an experiment, this playbook fetches results (*wasSent.txt and *wasReceived.txt files) into the folder: *deploy\jars\client\results*.
+To start clients, run: `ansible-playbook clients_start.yml`. When an experiment ends, this playbook fetches results (*wasSent.txt and *wasReceived.txt files) into the folder: *deploy\jars\client\results*.
 
 ## Terminate the environment
 To terminate all EC2 instances, run: `ansible-playbook terminate_instances.yml`.\
