@@ -54,7 +54,7 @@ Note, you can build your own clients and direct messages to DynamicBalancer as l
 In our case, we use [HikingGenerator](https://github.com/MoeweX/IoTDSG/blob/master/IoTDSG/src/main/kotlin/de/hasenburg/iotdsg/HikingGenerator.kt) that generates files to simulate a hiking scenario where clients travel on predefined routes.
 
 The generated files are to be grouped and compressed into directories. Each group of files will be executed on a separate EC2 instance.
-A name of each directory should start with an increasing integer number. For example, the first EC2 client instance will take care of a directory named '0.zip', the second - for a directory '1.zip'.
+A name of each directory should start with an increasing integer number starting from 0. For example, files in a directory named '0.zip' will be launched in the first EC2 client instance, a directory '1.zip' - in the second one.
 Put compressed files into the directory: *deploy\jars\client\zipped*. 
 The playbook `clients_start.yml` will start exactly the same number of EC2 client instances as a number of compressed directories. 
 The current repository contains three compressed directories, i.e, three EC2 client instances will be started. 
