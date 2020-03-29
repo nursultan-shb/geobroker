@@ -49,7 +49,7 @@ Once the command successfully finished, DynamicBalancer is ready to accept clien
 The address of the load balancer where clients can send their messages to is available in properties *loadbalancer_ip* and *loadbalancer_frontend_port* of the *variables.yml* file.
 
 ## Run clients
-This section describes the our way of running clients. 
+This section describes our way of running clients. 
 Note, you can build your own clients and direct messages to DynamicBalancer as long as they are compliant with message types supported by [GeoBroker](https://github.com/MoeweX/geobroker).
 In our case, we use [HikingGenerator](https://github.com/MoeweX/IoTDSG/blob/master/IoTDSG/src/main/kotlin/de/hasenburg/iotdsg/HikingGenerator.kt) that generates files to simulate a hiking scenario where clients travel on predefined routes.
 
