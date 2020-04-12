@@ -23,4 +23,4 @@ git submodule update
 
 ## Deployment
 
-To deploy DynamicBalancer, follow: `deploy/READ.ME`
+To deploy DynamicBalancer and run clients, follow: `deploy/READ.ME`
