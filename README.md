@@ -1,8 +1,11 @@
 # DynamicBalancer
 
-DynamicBalancer is a horizontal scalable pub/sub research prototype that distributes client messages across **GeoBroker** clusters.
-The load balancing mechanism considers live characteristics of passing traffic to dynamically adjust the load on servers. 
-DynamicBalancer is location-aware, as it additionally considers the geo-context of data to reduce excessive data dissemination and enable clients to have accurate control of message delivery.
+With the rapid growth of mobile connected devices, Internet of Things (IoT) applications face a great scalability challenge.
+IoT services often use the publish-subscribe (pub/sub) communication paradigm for the effective distribution of messages. 
+We propose **DynamicBalancer**, a horizontally scalable topic-based pub/sub system. 
+Our solution is location-aware, as it additionally considers the geo-context of data to reduce excessive data dissemination and enable clients to have  accurate control of message delivery. 
+DynamicBalancer distributes client messages across **GeoBroker** nodes. The load balancing mechanism considers live characteristics of passing
+traffic to dynamically adjust the load on servers. 
 
 ## GeoBroker
 
